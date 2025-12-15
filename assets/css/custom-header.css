@@ -1,0 +1,311 @@
+/* Ocellaris Custom Header Styles */
+
+/* global colors */
+:root {
+  --ocellaris-blue: #4592eb;
+}
+
+/* style overflow */
+header .custom-logo-link img {
+  max-width: 100%!important;
+  width: auto!important;
+}
+
+.ocellaris-header {
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ocellaris-header-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Menu Toggle Button */
+.ocellaris-menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--ocellaris-blue);
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.625rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ocellaris-menu-toggle:hover {
+  background: var(--ocellaris-blue);
+}
+
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 18px;
+}
+
+.menu-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: all 0.3s;
+}
+
+/* Logo */
+.ocellaris-logo {
+  flex-shrink: 0;
+  margin-right: 2em;
+}
+
+.ocellaris-logo a {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ocellaris-blue);
+  text-decoration: none;
+}
+
+.ocellaris-logo img {
+  height: 40px;
+  width: auto;
+}
+
+/* Search Bar */
+.ocellaris-search {
+  flex: 1;
+  max-width: 800px;
+}
+
+.search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-field {
+  width: 100%;
+  padding: 0.625rem 3rem 0.625rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-field:focus {
+  border-color: var(--ocellaris-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search-submit {
+  position: absolute;
+  right: 0.5rem;
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.search-submit:hover {
+  color: var(--ocellaris-blue);
+}
+
+/* Header Actions */
+.ocellaris-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.ocellaris-signin,
+.ocellaris-cart {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.ocellaris-signin:hover,
+.ocellaris-cart:hover {
+  color: var(--ocellaris-blue);
+}
+
+.ocellaris-cart {
+  position: relative;
+}
+
+/* Sidebar Menu */
+.ocellaris-sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s;
+  z-index: 1998;
+}
+
+.ocellaris-sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.ocellaris-sidebar-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 100%;
+  background: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1999;
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.ocellaris-sidebar-menu.active {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: var(--ocellaris-blue);
+  color: #fff;
+}
+
+.sidebar-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.sidebar-close {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+
+.sidebar-close:hover {
+  opacity: 0.8;
+}
+
+.sidebar-navigation {
+  padding: 1rem 0;
+}
+
+.sidebar-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-menu-list .menu-item {
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.sidebar-menu-list .menu-item a {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.9375rem;
+  transition: all 0.2s;
+}
+
+.sidebar-menu-list .menu-item a:hover {
+  background: #f9fafb;
+  color: var(--ocellaris-blue);
+  padding-left: 2rem;
+}
+
+.sidebar-menu-list .menu-item.menu-item-has-children > a::after {
+  content: '›';
+  margin-left: auto;
+  font-size: 1.5rem;
+  font-weight: 300;
+}
+
+/* Submenu */
+.sidebar-menu-list .sub-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #f9fafb;
+}
+
+.sidebar-menu-list .sub-menu .menu-item a {
+  padding-left: 3rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .ocellaris-header-container {
+    gap: 1rem;
+    padding: 0.625rem 1rem;
+  }
+  
+  .ocellaris-search {
+    max-width: none;
+  }
+  
+  .ocellaris-signin span {
+    display: none;
+  }
+  
+  .menu-text {
+    display: none;
+  }
+  
+  .ocellaris-menu-toggle {
+    padding: 0.5rem;
+    min-width: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ocellaris-logo a {
+    font-size: 1rem;
+  }
+  
+  .search-field {
+    font-size: 0.8125rem;
+    padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  }
+}
