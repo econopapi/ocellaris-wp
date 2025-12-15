@@ -1,0 +1,191 @@
+/* Ocellaris Product Categories Block - Frontend Styles */
+
+.ocellaris-product-categories {
+  padding: 5px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.categories-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FF6347;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 20px;
+}
+
+.categories-subtitle {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FF6347;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-top: 60px;
+}
+
+.categories-wrapper {
+  position: relative;
+  margin-top: 5px;
+}
+
+.categories-curve {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  width: 100%;
+  height: 100px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.categories-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+  padding: 20px 0;
+}
+
+.category-item {
+  text-align: center;
+  flex: 0 0 auto;
+  width: 160px;
+  transition: transform 0.3s ease;
+}
+
+.category-item:hover {
+  transform: translateY(-10px);
+}
+
+.category-link {
+  text-decoration: none;
+  display: block;
+}
+
+.category-image-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto 15px;
+}
+
+.category-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.category-item:hover .category-circle {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.category-image {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 20px;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.category-item:hover .category-image {
+  transform: scale(1.1);
+}
+
+.category-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.3;
+  transition: color 0.3s ease;
+}
+
+.category-item:hover .category-name {
+  color: #2563eb;
+}
+
+/* Responsive Styles */
+@media (max-width: 1200px) {
+  .categories-container {
+    gap: 30px;
+  }
+  
+  .category-item {
+    width: 140px;
+  }
+  
+  .category-image-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ocellaris-product-categories {
+    padding: 40px 15px;
+  }
+  
+  .categories-title,
+  .categories-subtitle {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+  }
+  
+  .categories-container {
+    gap: 25px;
+  }
+  
+  .category-item {
+    width: 120px;
+  }
+  
+  .category-image-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .category-name {
+    font-size: 0.8rem;
+  }
+  
+  .categories-curve {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .categories-container {
+    gap: 20px;
+  }
+  
+  .category-item {
+    width: 100px;
+  }
+  
+  .category-image-wrapper {
+    width: 85px;
+    height: 85px;
+  }
+  
+  .category-name {
+    font-size: 0.75rem;
+  }
+}
