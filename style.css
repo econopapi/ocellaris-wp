@@ -9,3 +9,19 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: ocellaris-custom-astra
 Template: astra
 */
+
+#sideline-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#sideline-heading::before,
+#sideline-heading::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: #a4a4a4; 
+  margin: 0 10px;
+}
