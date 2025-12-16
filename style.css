@@ -29,3 +29,14 @@ Template: astra
   background: #a4a4a4; 
   margin: 0 10px;
 }
+
+.orange-button,
+.wp-product-1 {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.orange-button:hover,
+.wp-product-1:hover {
+  transform: scale(1.10);
+}
+
