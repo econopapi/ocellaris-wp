@@ -37,7 +37,7 @@
 
 .ocellaris-product-categories-editor .components-checkbox-control__input[type="checkbox"]:checked {
   background: var(--ocellaris-blue);
-  border-color: var(--ocellaris-blue);
+  border-color: var(--ocellaris-deep-blue);
 }
 
 /* Category preview styling in editor */

@@ -10,9 +10,13 @@ Text Domain: ocellaris-custom-astra
 Template: astra
 */
 
+/* global colors */
 :root {
   --ocellaris-blue: #4592eb;
+  --ocellaris-deep-blue: #003866;
+  --ocellaris-orange: #f15a22;
 }
+
 
 #sideline-heading {
   display: flex;

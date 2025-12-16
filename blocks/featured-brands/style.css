@@ -1,0 +1,275 @@
+/* Ocellaris Featured Brands Block - Frontend Styles */
+
+.ocellaris-featured-brands {
+  padding: 60px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.brands-title {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--ocellaris-orange);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+.brands-carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.carousel-nav {
+  flex-shrink: 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--ocellaris-blue);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+.carousel-nav:hover {
+  background: var(--ocellaris-blue);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.carousel-nav:active {
+  transform: scale(0.95);
+}
+
+.carousel-prev {
+  margin-right: -10px;
+}
+
+.carousel-next {
+  margin-left: -10px;
+}
+
+/**/
+.carousel-nav svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+    overflow: visible;
+    vector-effect: non-scaling-stroke;
+}
+
+.carousel-nav svg path,
+.carousel-nav svg line,
+.carousel-nav svg polyline,
+.carousel-nav svg polygon {
+    stroke: #fff !important;          /* color del trazo */
+    stroke-opacity: 1 !important;
+    stroke-width: 2.5 !important;     /* un poco más grueso para probar */
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    fill: none !important;            /* evitar rellenos que oculten el trazo */
+    pointer-events: none;
+}
+/**/
+
+.brands-carousel-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.brands-carousel {
+  display: flex;
+  align-items: center;
+  will-change: transform;
+}
+
+.brand-item {
+  flex-shrink: 0;
+  padding: 0 15px;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* .brand-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+} */
+
+.brand-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: visible; /* permitir que el contenido interno aparezca fuera */
+  transform: none; /* quitar el translateY del enlace */
+}
+
+/* .brand-link:hover {
+  border-color: var(--ocellaris-blue);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  transform: translateY(-3px);
+} */
+
+.brand-link:hover {
+  border-color: var(--ocellaris-blue);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  /* no usar transform aquí (evita que se recorte) */
+}
+
+.brand-logo {
+  max-width: 100%;
+  max-height: 60px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.brand-link:hover .brand-logo {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.brand-name-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.brand-link:hover .brand-name-text {
+  color: var(--ocellaris-blue);
+}
+
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .brands-carousel-wrapper {
+    gap: 15px;
+  }
+  
+  .carousel-nav {
+    width: 45px;
+    height: 45px;
+  }
+  
+  .brand-link {
+    height: 90px;
+    padding: 15px;
+  }
+  
+  .brand-logo {
+    max-height: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ocellaris-featured-brands {
+    padding: 40px 15px;
+  }
+  
+  .brands-title {
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    margin-bottom: 30px;
+  }
+  
+  .brands-carousel-wrapper {
+    gap: 10px;
+  }
+  
+  .carousel-nav {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .carousel-nav svg {
+    color: #fff;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .brand-item {
+    padding: 0 10px;
+  }
+  
+  .brand-link {
+    height: 80px;
+    padding: 12px;
+  }
+  
+  .brand-logo {
+    max-height: 45px;
+  }
+  
+  .brand-name-text {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .brands-carousel-wrapper {
+    gap: 8px;
+  }
+  
+  .carousel-nav {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .carousel-nav svg {
+    color: #fff;
+    width: 18px;
+    height: 18px;
+  }
+  
+  .brand-item {
+    padding: 0 8px;
+  }
+  
+  .brand-link {
+    height: 70px;
+    padding: 10px;
+  }
+  
+  .brand-logo {
+    max-height: 40px;
+  }
+  
+  .brand-name-text {
+    font-size: 0.75rem;
+  }
+}

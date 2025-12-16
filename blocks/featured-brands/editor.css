@@ -1,0 +1,54 @@
+/* Ocellaris Featured Brands Block - Editor Styles */
+
+.ocellaris-featured-brands-editor {
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
+  padding: 30px;
+  background: #fafafa;
+  min-height: 200px;
+}
+
+.ocellaris-featured-brands-editor .editor-preview {
+  background: white;
+  padding: 40px 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ocellaris-featured-brands-editor .editor-preview h3 {
+  margin: 0 0 20px 0;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.ocellaris-featured-brands-editor .components-panel__body {
+  border-top: 1px solid #e0e0e0;
+  margin-top: 0;
+}
+
+.ocellaris-featured-brands-editor .components-base-control {
+  margin-bottom: 16px;
+}
+
+.ocellaris-featured-brands-editor .components-base-control__label {
+  font-weight: 600;
+  color: var(--ocellaris-blue);
+}
+
+.ocellaris-featured-brands-editor .components-checkbox-control__input[type="checkbox"]:checked {
+  background: var(--ocellaris-blue);
+  border-color: var(--ocellaris-deep-blue);
+}
+
+.ocellaris-featured-brands-editor .components-range-control__wrapper {
+  margin-top: 8px;
+}
+
+/* Preview styling in editor */
+.editor-preview > div > div {
+  transition: transform 0.2s ease;
+}
+
+.editor-preview > div > div:hover {
+  transform: translateY(-3px);
+}

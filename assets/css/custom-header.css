@@ -1,10 +1,4 @@
 /* Ocellaris Custom Header Styles */
-
-/* global colors */
-:root {
-  --ocellaris-blue: #4592eb;
-}
-
 /* style overflow */
 header .custom-logo-link img {
   max-width: 100%!important;
