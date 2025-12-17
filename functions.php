@@ -113,8 +113,10 @@ add_action('wp_enqueue_scripts', 'ocellaris_custom_footer_assets');
 function ocellaris_register_menus() {
 	register_nav_menus(
 		array(
-			'sidebar-menu' => __('Sidebar Menu', 'ocellaris-custom-astra'),
-		));
+			'sidebar-menu' => __('Sidebar Menu (Categorías)', 'ocellaris-custom-astra'),
+			'quick-links-menu' => __('Quick Links Menu', 'ocellaris-custom-astra'),
+		)
+	);
 }
 add_action('init', 'ocellaris_register_menus');
 
