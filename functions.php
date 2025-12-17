@@ -23,6 +23,11 @@ function child_enqueue_styles() {
 
 add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
 
+/**
+ * OCELLARIS CUSTOM HEADER
+ * Implementación de un encabezado personalizado para el tema Astra.
+ */
+
 
 /**
  * Custom Header scripts and styles
@@ -67,6 +72,42 @@ add_action('astra_header', 'ocellaris_custom_header_markup');
 
 
 /**
+ * OCELLARIS CUSTOM FOOTER
+ * Implementación de un pie de página personalizado para el tema Astra.
+ */
+
+/**
+ * Remove default Astra Footer
+ */
+function ocellaris_remove_astra_footer() {
+	remove_action('astra_footer', 'astra_footer_markup');
+}
+add_action('wp', 'ocellaris_remove_astra_footer');
+
+
+/**
+ * Add Ocellaris Custom Footer
+ */
+function ocellaris_custom_footer_markup() {
+	get_template_part('template-parts/footer-custom');
+}
+add_action('astra_footer', 'ocellaris_custom_footer_markup');
+
+
+/**
+ * Ocellaris Custom Footer scripts and styles
+ */
+function ocellaris_custom_footer_assets() {
+	wp_enqueue_style(
+		'ocellaris-footer-css',
+		get_stylesheet_directory_uri() . '/assets/css/custom-footer.css',
+		array(),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+}
+add_action('wp_enqueue_scripts', 'ocellaris_custom_footer_assets');
+
+/**
  * Register Navigation Menus
  */
 function ocellaris_register_menus() {
@@ -76,7 +117,6 @@ function ocellaris_register_menus() {
 		));
 }
 add_action('init', 'ocellaris_register_menus');
-
 
 /**
  * OCELLARIS CUSTOM PRODUCT CATEGORY BLOCK

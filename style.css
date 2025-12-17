@@ -44,3 +44,10 @@ Template: astra
   transform: scale(1.10);
 }
 
+.video-circular {
+  /* width: 300px;
+  height: 300px; */
+  border-radius: 50%; 
+  overflow: hidden;
+}
+
