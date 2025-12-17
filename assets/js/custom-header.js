@@ -16,19 +16,19 @@
         // Datos de submenús (acá podés agregar más categorías)
         const submenuData = {
             'aquariums': {
-                title: 'Aquariums & Stands',
+                title: 'Acuarios y soportes',
                 items: [
-                    { title: 'All Aquariums', link: '#' },
-                    { title: 'Rimless Aquariums', link: '#' },
-                    { title: 'Peninsula Aquariums', link: '#' },
-                    { title: 'Cube Aquariums', link: '#' },
-                    { title: 'Standard Aquariums', link: '#' },
+                    { title: 'Todos los productos', link: '#' },
+                    { title: 'Rimless', link: '#' },
+                    { title: 'Península', link: '#' },
+                    { title: 'Cubos', link: '#' },
+                    { title: 'Bases', link: '#' },
                     { title: 'Frag Tanks', link: '#' },
                     { title: 'Stands & Canopies', link: '#' }
                 ]
             },
             'lighting': {
-                title: 'Lighting',
+                title: 'Iluminación',
                 groups: [
                     {
                         title: 'LED',
