@@ -69,7 +69,7 @@
 <!-- Sidebar Menu -->
 <div class="ocellaris-sidebar-menu">
 	<div class="sidebar-header">
-		<h3>Quick Links</h3>
+		<h3>Enlaces rápidos</h3>
 		<button class="sidebar-close" aria-label="Close Menu">
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
 				<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -124,7 +124,7 @@ function ocellaris_default_quick_links() {
 					<path d="M12 2L2 7l10 5 10-5-10-5z"/>
 					<path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
 				</svg>
-				DEALS
+				Ofertas
 			</a>
 		</li>
 		<li class="menu-item">
@@ -133,7 +133,7 @@ function ocellaris_default_quick_links() {
 					<rect x="2" y="5" width="20" height="14" rx="2"/>
 					<line x1="2" y1="10" x2="22" y2="10"/>
 				</svg>
-				Gift Cards
+				Tarjetas de regalo
 			</a>
 		</li>
 		<li class="menu-item">
@@ -141,7 +141,7 @@ function ocellaris_default_quick_links() {
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
 				</svg>
-				What's New
+				Novedades
 			</a>
 		</li>
 		<li class="menu-item">
@@ -151,7 +151,7 @@ function ocellaris_default_quick_links() {
 					<circle cx="20" cy="21" r="1"/>
 					<path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
 				</svg>
-				Shop Brands
+				Marcas
 			</a>
 		</li>
 		<li class="menu-item">
@@ -159,7 +159,7 @@ function ocellaris_default_quick_links() {
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
 				</svg>
-				Clearance
+				Blog
 			</a>
 		</li>
 	</ul>
@@ -174,7 +174,7 @@ function ocellaris_default_sidebar_menu() {
 	<ul class="sidebar-menu-list">
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="aquariums">
-				Aquariums & Stands
+				Acuarios y soportes
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -182,7 +182,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="lighting">
-				Lighting
+				Iluminación
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -190,7 +190,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="pumps">
-				Pumps & Powerheads
+				Bombas y cabezales de potencia
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -198,7 +198,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="plumbing">
-				Plumbing
+				Plomería
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -206,7 +206,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="controllers">
-				Controllers & Testing
+				Controladores y testeo
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -214,7 +214,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="additives">
-				Additives
+				Aditivos
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -222,7 +222,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="reverse-osmosis">
-				Reverse Osmosis
+				Sistemas RO/DI
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
@@ -230,7 +230,7 @@ function ocellaris_default_sidebar_menu() {
 		</li>
 		<li class="menu-item menu-item-has-children">
 			<a href="#" data-category="salt">
-				Salt & Maintenance
+				Sal y Mantenimiento del agua
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
 					<polyline points="9 18 15 12 9 6"/>
 				</svg>
