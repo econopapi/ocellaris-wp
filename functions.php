@@ -368,3 +368,337 @@ function ocellaris_render_featured_brands_block($attributes) {
 	<?php
 	return ob_get_clean();
 }
+
+
+/**
+ * OCELLARIS CUSTOM TOP TEXT BAR
+ * Implementación de una barra de texto superior personalizada.
+ */
+
+/**
+ * Página de configuración de banner
+ */
+function ocellaris_config_text_bar_page() {
+	add_theme_page(
+		'Configuración de barra de texto superior',
+		'Ocellaris Text Bar',
+		'manage_options',
+		'ocellaris-text-bar',
+		'ocellaris_render_text_bar'
+	);
+}
+add_action('admin_menu', 'ocellaris_config_text_bar_page');
+
+/**
+ * Registro de settings de la barra de texto
+ */
+function ocellaris_register_text_bar_settings() {
+	register_setting(
+		'ocellaris_text_bar_settings',
+		'ocellaris_text_bar_active',
+		array('sanitize_callback' => 'ocellaris_sanitize_checkbox')
+	);
+
+	register_setting(
+		'ocellaris_text_bar_settings',
+		'ocellaris_text_bar_content',
+		array('sanitize_callback' => 'sanitize_text_field')
+	);
+
+	register_setting(
+		'ocellaris_text_bar_settings',
+		'ocellaris_text_bar_link',
+		array('sanitize_callback' => 'esc_url_raw')
+	);
+
+	register_setting(
+		'ocellaris_text_bar_settings',
+		'ocellaris_text_bar_color',
+		array(
+			'sanitize_callback' => 'sanitize_hex_color',
+			'default' => '#003866;'
+		)
+	);
+}
+add_action('admin_init', 'ocellaris_register_text_bar_settings');
+
+
+/**
+ * Helper de sanitización para checkbox
+ * @param $valor Valor recibido en el checkbox
+ * @return string 1 si está marcado, 0 si no
+ */
+function ocellaris_sanitize_checkbox($valor) {	
+	return (isset($valor) && $valor == '1')? '1': '0';
+}
+
+
+/**
+ * Página de configuración en Apariencia > Ocellaris Text Bar
+ */
+function ocellaris_render_text_bar() {
+	// validación de permisos
+	if(!current_user_can('manage_options')){
+		return;
+	}
+
+	// obtener opciones cuardadas
+	$active = get_option('ocellaris_text_bar_active', '0');
+	$content = get_option('ocellaris_text_bar_content', '');
+	$color = get_option('ocellaris_text_bar_color', '#003866;');
+	$link = get_option('ocellaris_text_bar_link', '');
+
+	// mensaje de éxito al guardar
+	if (isset($_GET['settings-updated'])) {
+		echo '<div class="notice notice-success is-dismissible"><p>¡Configuración guardada correctamente!</p></div>';
+	}
+	?>
+	<div class="wrap">
+		<h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+		<p class="description">
+			Configuración de barra de texto superior para el sitio Ocellaris.
+			Este banner se muestra de forma global en todo el sitio web.
+		</p>
+		<!-- preview de la barra -->
+		 <div class="ocellaris-banner-preview"
+		 		style="margin: 20px 0; padding: 20px; background: #f0f0f1; border-radius: 4px;">
+			<h2 style="margin-top: 0;">Vista Previa</h2>
+			<div id="ocellaris-text-bar-preview-container">
+				<?php if ($active == '1' && !empty($content)): ?>
+					<?php if (!empty($link)): ?>
+					<a href="<?php echo esc_url($link); ?>"
+						class="ocellaris-text-bar-preview"
+						style="background-color: <?php echo esc_attr( $color ); ?>; display: block; padding: 12px 20px; text-align: center; text-decoration: none; color: white; font-weight: 600; transition: opacity 0.3s ease; border-radius: 4px;">
+					<?php echo esc_html($content); ?>
+					</a>
+					<?php else: ?>
+					<div class="ocellaris-text-bar-preview"
+						 id="ocellaris-text-bar-preview"
+						 style="background-color: <?php echo esc_attr( $color ); ?>; display: block; padding: 12px 20px; text-align: center; color: white; font-weight: 600; border-radius: 4px;">
+						<?php echo esc_html($content); ?>
+					</div>
+					<?php endif; ?>
+				<?php else: ?>
+					<p style="color: #666; font-style: italic;">
+						La barra no se mostrará porque <?php echo ($active != '1') ? 'no está activada' : 'no tiene contenido'; ?>.
+					</p>
+				<?php endif; ?>
+			</div>
+		 </div>
+
+		 <!-- form de configuración -->
+		<form action="options.php" method="post" id="ocellaris-text-bar-form">
+			<?php
+			// hidden fields para procesamiento de formulario
+			settings_fields('ocellaris_text_bar_settings');
+			?>
+			<table class="form-table">
+				<!-- activar/desactivar barra -->
+				 <tr>
+					<th scope="row">
+						<label for="ocellaris_text_bar_active">Estado de la barra de texto</label>
+					</th>
+					<td>
+						<label>
+							<input type="checkbox"
+								   id="ocellaris_text_bar_active"
+								   name="ocellaris_text_bar_active"
+								   value="1" <?php checked( $active, '1' ); ?> />
+							<strong>Activar barra de texto</strong>
+						</label>
+						<p class="description">
+							Marca esta opción para mostrar la barra de texto en el sitio web.
+						</p>
+					</td>
+				 </tr>
+				<!-- contenido de la barra -->
+				 <tr>
+					<th scope="row">
+						<label for="ocellaris_text_bar_content">Contenido de la barra de texto</label>
+					</th>
+					<td>
+						<input type="text"
+							   id="ocellaris_text_bar_content"
+							   name="ocellaris_text_bar_content"
+							   value="<?php echo esc_attr( $content ); ?>"
+							   class="regular-text" />
+						<p class="description">
+							Mensaje que se mostrará en la barra.
+						</p>
+					</td>
+				 </tr>
+
+				<!-- link de la barra -->
+				 <tr>
+					<th scope="row">
+						<label for="ocellaris_text_bar_link">Enlace de la barra de texto</label>
+					</th>
+					<td>
+						<input type="url"
+							   id="ocellaris_text_bar_link"
+							   name="ocellaris_text_bar_link"
+							   value="<?php echo esc_url( $link ); ?>"
+							   class="regular-text" />
+						<p class="description">
+							Enlace al que se dirigirá el usuario al hacer clic en la barra. Déjalo vacío si no desea que la barra sea un enlace.
+						</p>
+					</td>
+				 </tr>
+
+				<!-- color de fondo de la barra -->
+				 <tr>
+					<th scope="row">
+						<label for="ocellaris_text_bar_color">Color de fondo de la barra de texto</label>
+					</th>
+					<td>
+						<input type="color"
+							   id="ocellaris_text_bar_color"
+							   name="ocellaris_text_bar_color"
+							   value="<?php echo esc_attr( $color ); ?>"
+							   class="regular-text ocellaris-color-field" />
+						<p class="description">
+							Selecciona el color de fondo de la barra de texto.
+						</p>
+					</td>
+				</tr>				
+			</table>
+			<?php submit_button('Guardar configuración'); ?>
+		</form>
+
+		<!-- script para actualizar la vista previa en realtime -->
+		<script>
+			(function() {
+				// obtener campos del formulario
+				const activeCheckbox = document.getElementById('ocellaris_text_bar_active');
+				const contentInput = document.getElementById('ocellaris_text_bar_content');
+				const colorInput = document.getElementById('ocellaris_text_bar_color');
+				const linkInput = document.getElementById('ocellaris_text_bar_link');
+				const previewContainer = document.getElementById('ocellaris-text-bar-preview-container');
+
+				// función para actualizar preview
+				function updatePreview() {
+					const isActive = activeCheckbox.checked;
+					const content = contentInput.value;
+					const color = colorInput.value;
+					const link = linkInput.value;
+
+					// mostrar mensaje si está desactivado o sin contenido
+					if(!isActive||!content) {
+						const message = !isActive? 'está desactivada': 'no tiene contenido';
+						previewContainer.innerHTML = `<p style="color: #666; font-style: italic;">
+							La barra no se mostrará porque ${message}.
+						</p>`
+						return;
+					}
+
+					// construir barra de texto
+					const baseStyle = `
+						background-color: ${color};
+						display: block;
+						padding: 12px 20px;
+						text-align: center;
+						color: white;
+						font-weight: 600;
+						border-radius: 4px;
+						transition: opacity 0.3s ease;
+					`;
+
+					if(link){
+						previewContainer.innerHTML = `
+							<a href="${link}"
+							   class="ocellaris-text-bar-preview"
+							   style="${baseStyle} text-decoration: none;">
+								${content}
+							</a>
+						`;
+					} else {
+						previewContainer.innerHTML = `
+							<div class="ocellaris-text-bar-preview"
+								 style="${baseStyle}">
+								${content}
+							</div>
+						`;
+					}
+				}
+
+				// event listener para todos los campos
+				[activeCheckbox, contentInput, colorInput, linkInput].forEach(field => {
+					field.addEventListener('input', updatePreview);
+				});
+			})();
+		</script>
+	</div>
+	<?php
+}
+
+
+/**
+ * Mostrar la barra de texto en el frontend
+ */
+function ocellaris_display_text_bar() {
+	// obtener opciones
+	$active = get_option('ocellaris_text_bar_active', '0');
+	$content = get_option('ocellaris_text_bar_content', '');
+	$color = get_option('ocellaris_text_bar_color', '#003866;');
+	$link = get_option('ocellaris_text_bar_link', '');
+
+	// no mostrar si no está activa o sin contenido
+	if($active != '1' || empty($content)) {
+		return;
+	}
+
+	// renderizar barra
+	if (!empty($link)) {
+		?>
+		<a href="<?php echo esc_url($link); ?>"
+		   class="ocellaris-text-bar"
+		   style="background-color: <?php echo esc_attr( $color ); ?>; display: block; padding: 12px 20px; text-align: center; text-decoration: none; color: white; font-weight: 600; transition: opacity 0.3s ease;">
+		<?php echo esc_html($content); ?>
+		</a>
+		<?php
+	} else {
+		?>
+		<div class="ocellaris-text-bar"
+			 style="background-color: <?php echo esc_attr( $color ); ?>; display: block; padding: 12px 20px; text-align: center; color: white; font-weight: 600;">
+		<?php echo esc_html($content); ?>
+		</div>
+		<?php
+	}
+}
+add_action('astra_header_before', 'ocellaris_display_text_bar');
+
+/**
+ * Estilos adicionales para la barra de texto en frontend
+ */
+function ocellaris_text_bar_frontend_styles() {
+	?>
+	<style>
+		.ocellaris-text-bar {
+			position: relative;
+			z-index: 999;
+		}
+
+		.ocellaris-text-bar:hover {
+			opacity: 0.9;
+			cursor: pointer;
+		}
+
+		/* responsive para móviles */
+		@media (max-width: 768px) {
+			.ocellaris-text-bar {
+				font-size: 14px;
+				padding: 10px 15px!important;
+			}
+		}
+
+		/* para pantallas MUY pequeñas */
+		@media (max-width: 480px) {
+			.ocellaris-text-bar {
+				font-size: 12px;
+				padding: 8px 10px!important;
+			}
+		}
+	</style>
+	<?php
+}
+add_action('wp_head', 'ocellaris_text_bar_frontend_styles');
