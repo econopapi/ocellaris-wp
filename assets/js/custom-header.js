@@ -10,6 +10,7 @@
         const sidebarMenu = $('.ocellaris-sidebar-menu');
         const sidebarOverlay = $('.ocellaris-sidebar-overlay');
         const sidebarClose = $('.sidebar-close');
+        const submenuClose = $('.submenu-sidebar-close');
         const submenuPanel = $('.ocellaris-submenu-panel');
         const submenuContent = $('.submenu-panel-content');
 
@@ -136,8 +137,14 @@
             }, 300);
         }
 
+        // Cerrar submenu sidebar
+        function closeSubmenu() {
+            submenuPanel.removeClass('active');
+        }
+
         sidebarClose.on('click', closeSidebar);
         sidebarOverlay.on('click', closeSidebar);
+        submenuClose.on('click', closeSubmenu);
 
         // Cerrar sidebar con ESC
         $(document).on('keydown', function(e) {

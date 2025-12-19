@@ -106,6 +106,11 @@
 
 <!-- Panel de submenú (aparece a la derecha) -->
 <div class="ocellaris-submenu-panel">
+	<button class="submenu-sidebar-close" aria-label="Close Menu">
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+			<path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+		</svg>
+	</button>
 	<div class="submenu-panel-content">
 		<!-- El contenido se carga dinámicamente con JS -->
 	</div>
