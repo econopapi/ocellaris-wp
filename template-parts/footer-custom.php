@@ -11,7 +11,7 @@
     <div class="cta-content">
         <h2 class="cta-title">¡Suscríbete a nuestro newsletter y mantente actualizado!</h2>
         <p class="cta-subtitle">Nuestro newsletter es la mejor forma de estar actualizado en el mundo del acuarismo.</p>
-        <a href="<?php echo esc_url(home_url('/newsletter')); ?>" class="cta-button">Suscribirse</a>
+        <a href="<?php echo esc_url(home_url('/newsletter')); ?>" class="cta-button popmake-258">Suscribirse</a>
     </div>
  </div>
 
@@ -75,7 +75,7 @@
                     <li><a href="#">Tienda física</a></li>
                     <li><a href="#">Blog</a></li>
                     <li><a href="#">Programa de afiliados</a></li>
-                    <li><a href="#">Términos y condiciones</a></li>
+                    <li><a href="/terminos-y-condiciones">Términos y condiciones</a></li>
                 </ul>
             </div>
 
@@ -114,9 +114,9 @@
 				<span><?php echo date( 'Y' ); ?> Ocellaris. Todos los derechos reservados.</span>                
             </div>
             <div class="legal-links">
- 				<a href="<?php echo esc_url( home_url( '#' ) ); ?>">Política de privacidad</a>
+				<a href="<?php echo esc_url( home_url( '/aviso-de-privacidad/' ) ); ?>">Aviso de privacidad</a>
 				<span class="separator">|</span>
-				<a href="<?php echo esc_url( home_url( '#' ) ); ?>">Términos y condiciones</a>               
+				<a href="<?php echo esc_url( home_url( '/terminos-y-condiciones/' ) ); ?>">Términos y condiciones</a>               
             </div>
         </div>
     </div>
