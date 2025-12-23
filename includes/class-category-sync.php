@@ -20,6 +20,7 @@ class Ocellaris_Category_Sync {
         $this->load_category_map();
     }
     
+
     /**
      * Sincronizar todas las categorías
      */
@@ -33,7 +34,16 @@ class Ocellaris_Category_Sync {
             );
         }
         
-        $categories = $result['data'];
+        // Validar que $result['data'] es un array
+        $categories = isset($result['data']) ? $result['data'] : array();
+        
+        // Si no es array, probablemente sea un error
+        if (!is_array($categories)) {
+            return array(
+                'success' => false,
+                'message' => 'Respuesta inválida del API de iPos: ' . gettype($categories)
+            );
+        }
         
         if (empty($categories)) {
             return array(
@@ -49,6 +59,12 @@ class Ocellaris_Category_Sync {
         
         // Primero procesamos las categorías sin padre (top-level)
         foreach ($categories as $category) {
+            // Validar que $category es un array
+            if (!is_array($category)) {
+                $errors[] = 'Categoría inválida recibida del API';
+                continue;
+            }
+            
             if (empty($category['Parent'])) {
                 $sync_result = $this->sync_category($category);
                 $this->process_sync_result($sync_result, $created, $updated, $skipped, $errors);
@@ -57,6 +73,10 @@ class Ocellaris_Category_Sync {
         
         // Luego procesamos las categorías con padre
         foreach ($categories as $category) {
+            if (!is_array($category)) {
+                continue;
+            }
+            
             if (!empty($category['Parent'])) {
                 $sync_result = $this->sync_category($category);
                 $this->process_sync_result($sync_result, $created, $updated, $skipped, $errors);
@@ -173,17 +193,20 @@ class Ocellaris_Category_Sync {
     private function get_wc_category_id($ipos_id) {
         // Primero buscar en el mapa en memoria
         if (isset($this->category_map[$ipos_id])) {
-            // Verificar que la categoría realmente existe en WC
             $term = get_term($this->category_map[$ipos_id], 'product_cat');
             if (!is_wp_error($term) && $term) {
                 return $this->category_map[$ipos_id];
             } else {
-                // El término ya no existe, limpiar del mapeo
                 unset($this->category_map[$ipos_id]);
             }
         }
         
-        // Buscar en la base de datos
+        // Verificar que la taxonomía existe
+        if (!taxonomy_exists('product_cat')) {
+            return false;
+        }
+        
+        // Buscar en la base de datos con validación
         $terms = get_terms(array(
             'taxonomy' => 'product_cat',
             'hide_empty' => false,
@@ -193,10 +216,16 @@ class Ocellaris_Category_Sync {
                     'value' => $ipos_id,
                     'compare' => '='
                 )
-            )
+            ),
+            'suppress_filter' => true // Agregar esto
         ));
         
-        if (!empty($terms) && !is_wp_error($terms)) {
+        if (is_wp_error($terms)) {
+            error_log('Error en get_terms: ' . $terms->get_error_message());
+            return false;
+        }
+        
+        if (!empty($terms)) {
             $term_id = $terms[0]->term_id;
             $this->category_map[$ipos_id] = $term_id;
             return $term_id;

@@ -33,6 +33,28 @@ class Ocellaris_IPos_API {
     }
     
     /**
+     * Obtener todos los productos
+     * ADVERTENCIA: Este endpoint no tiene paginación y puede devolver 45k+ líneas
+     */
+    public function get_products() {
+        return $this->make_request('/products');
+    }
+    
+    /**
+     * Obtener un producto específico
+     */
+    public function get_product($product_id) {
+        return $this->make_request('/products/' . $product_id);
+    }
+    
+    /**
+     * Buscar producto por SKU
+     */
+    public function get_product_by_sku($sku) {
+        return $this->make_request('/products?sku=' . urlencode($sku));
+    }
+    
+    /**
      * Hacer petición a la API
      */
     private function make_request($endpoint, $method = 'GET', $body = null) {
@@ -51,7 +73,7 @@ class Ocellaris_IPos_API {
                 'Authorization' => 'Bearer ' . $this->api_key,
                 'Content-Type' => 'application/json'
             ),
-            'timeout' => 30
+            'timeout' => 45
         );
         
         if ($body && $method !== 'GET') {

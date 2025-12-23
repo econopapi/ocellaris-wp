@@ -20,9 +20,10 @@ class Ocellaris_IPos_Admin {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         
         // AJAX handlers
-        add_action('wp_ajax_sync_ipos_categories', array($this, 'ajax_sync_categories'));
         add_action('wp_ajax_test_ipos_connection', array($this, 'ajax_test_connection'));
+        add_action('wp_ajax_sync_ipos_categories', array($this, 'ajax_sync_categories'));
         add_action('wp_ajax_clear_ipos_cache', array($this, 'ajax_clear_cache'));
+        add_action('wp_ajax_sync_ipos_products', array($this, 'ajax_sync_products'));
     }
     
     /**
@@ -96,9 +97,9 @@ class Ocellaris_IPos_Admin {
             
             <?php if (empty($api_key)): ?>
                 <div class="notice notice-warning">
-                    <p><strong>Ey!</strong> Todavía no configuraste tu API Key de iPos. 
+                    <p><strong>Atención!</strong> Todavía no configuraste tu API Key de iPos. 
                     <a href="<?php echo admin_url('admin.php?page=ocellaris-ipos-settings'); ?>">
-                        Andá a configuración
+                        Ve a la configuración
                     </a> para empezar.</p>
                 </div>
             <?php else: ?>
@@ -129,6 +130,27 @@ class Ocellaris_IPos_Admin {
                     
                     <button type="button" class="button button-secondary" id="clear-cache" style="margin-left: 10px;">
                         🗑️ Limpiar Caché
+                    </button>
+                </div>
+                
+                <div class="ipos-sync-card">
+                    <h2>Sincronización de Productos</h2>
+                    <p>Sincroniza los productos desde iPos a WooCommerce. Este proceso puede tardar varios minutos.</p>
+                    <p><strong>Nota:</strong> Asegurate de haber sincronizado las categorías primero.</p>
+                    
+                    <div id="product-sync-progress" style="display: none;">
+                        <div class="sync-spinner"></div>
+                        <p id="product-sync-message">Sincronizando productos...</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="product-progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p id="product-progress-text">0 / 0 procesados</p>
+                    </div>
+                    
+                    <div id="product-sync-results" style="display: none;"></div>
+                    
+                    <button type="button" class="button button-primary" id="sync-products">
+                        🔄 Sincronizar Productos Ahora
                     </button>
                 </div>
                 
@@ -190,6 +212,10 @@ class Ocellaris_IPos_Admin {
         $wc_categories = wp_count_terms('product_cat');
         $last_sync = get_option('ocellaris_ipos_last_sync');
         
+        $wc_products = wp_count_posts('product');
+        $wc_products_count = isset($wc_products->publish) ? $wc_products->publish : 0;
+        $last_product_sync = get_option('ocellaris_ipos_last_product_sync');
+        
         ?>
         <table class="widefat">
             <tbody>
@@ -202,8 +228,16 @@ class Ocellaris_IPos_Admin {
                     <td><?php echo is_numeric($wc_categories) ? $wc_categories : 0; ?></td>
                 </tr>
                 <tr>
-                    <td><strong>Última sincronización:</strong></td>
+                    <td><strong>Última sincronización (categorías):</strong></td>
                     <td><?php echo $last_sync ? date('d/m/Y H:i:s', $last_sync) : 'Nunca'; ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Productos en WooCommerce:</strong></td>
+                    <td><?php echo $wc_products_count; ?></td>
+                </tr>
+                <tr>
+                    <td><strong>Última sincronización (productos):</strong></td>
+                    <td><?php echo $last_product_sync ? date('d/m/Y H:i:s', $last_product_sync) : 'Nunca'; ?></td>
                 </tr>
             </tbody>
         </table>
@@ -284,12 +318,51 @@ class Ocellaris_IPos_Admin {
             wp_send_json_error('No tenés permisos para hacer esto.');
         }
         
+        // Eliminar opciones guardadas
         delete_option('ocellaris_ipos_category_map');
+        delete_option('ocellaris_ipos_product_map');
         delete_transient('ocellaris_ipos_categories_count');
         
-        wp_send_json_success('Caché limpiado correctamente.');
+        // Limpiar sesión y caché de productos
+        delete_transient('ocellaris_sync_session_id');
+        
+        // Limpiar todas las sesiones de caché de productos
+        global $wpdb;
+        $wpdb->query(
+            "DELETE FROM {$wpdb->options} 
+            WHERE option_name LIKE '_transient_ocellaris_ipos_products_cache_%' 
+            OR option_name LIKE '_transient_timeout_ocellaris_ipos_products_cache_%'"
+        );
+        
+        wp_send_json_success('✅ Caché limpiado correctamente. Puedes iniciar una nueva sincronización.');
+    }
+    
+    /**
+     * AJAX: Sincronizar productos
+     */
+    public function ajax_sync_products() {
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('No tenés permisos para hacer esto.');
+        }
+        
+        $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+        
+        require_once get_stylesheet_directory() . '/includes/class-ipos-api.php';
+        require_once get_stylesheet_directory() . '/includes/class-product-sync.php';
+        
+        $sync = new Ocellaris_Product_Sync();
+        $result = $sync->sync_all_products($offset);
+        
+        if ($result['success'] && $result['completed']) {
+            update_option('ocellaris_ipos_last_product_sync', time());
+        }
+        
+        wp_send_json_success($result);
     }
 }
 
 // Inicializar
 new Ocellaris_IPos_Admin();
+?>

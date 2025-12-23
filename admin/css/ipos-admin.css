@@ -169,3 +169,53 @@ button.loading .spinner {
 button:not(.loading) .spinner {
     display: none;
 }
+
+/* Contenedor de logs */
+.sync-logs-container {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    border: 1px solid #404040;
+}
+
+.log-entry {
+    padding: 5px 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.log-entry .log-time {
+    color: #858585;
+    margin-right: 8px;
+    display: inline-block;
+    min-width: 80px;
+}
+
+.log-entry strong {
+    color: #4ec9b0;
+}
+
+/* Scrollbar personalizado */
+.sync-logs-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sync-logs-container::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.sync-logs-container::-webkit-scrollbar-thumb {
+    background: #404040;
+    border-radius: 4px;
+}
+
+.sync-logs-container::-webkit-scrollbar-thumb:hover {
+    background: #505050;
+}
