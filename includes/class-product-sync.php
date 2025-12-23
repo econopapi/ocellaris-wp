@@ -17,12 +17,13 @@ class Ocellaris_Product_Sync {
     private $product_map = array();
     private $batch_size = 20; // Reducido para mejor control
     
-    private $max_execution_time = 240; // 4 minutos
+    private $max_execution_time = 99999; // 16.6 min
     private $start_time;
     
     // Sistema de logging
     private $logs = array();
     private $current_session_id;
+    private $logs_cache_key = 'ocellaris_ipos_sync_logs';
     
     // Caché de productos
     private $products_cache_key = 'ocellaris_ipos_products_cache';
@@ -43,7 +44,7 @@ class Ocellaris_Product_Sync {
     }
     
     /**
-     * Sistema de logging verboso
+     * Sistema de logging verboso CON persistencia
      */
     private function log($message, $level = 'info', $data = null) {
         $timestamp = date('Y-m-d H:i:s');
@@ -64,6 +65,9 @@ class Ocellaris_Product_Sync {
         
         $this->logs[] = $log_entry;
         
+        // NUEVO: Guardar en transient para persistencia entre requests
+        $this->persist_logs_to_cache();
+        
         // También guardar en error_log para debugging
         error_log(sprintf(
             '[IPOS-SYNC][%s][%ds][%sMB] %s',
@@ -75,9 +79,39 @@ class Ocellaris_Product_Sync {
     }
     
     /**
+     * NUEVO: Guardar logs en transient para que sobrevivan entre requests AJAX
+     */
+    private function persist_logs_to_cache() {
+        // Guardar solo los últimos 500 logs para no sobrecargar
+        $recent_logs = array_slice($this->logs, -500);
+        set_transient($this->logs_cache_key . '_' . $this->current_session_id, $recent_logs, HOUR_IN_SECONDS);
+    }
+    
+    /**
+     * NUEVO: Recuperar logs persistidos de requests anteriores
+     */
+    private function load_logs_from_cache() {
+        $cached_logs = get_transient($this->logs_cache_key . '_' . $this->current_session_id);
+        
+        if ($cached_logs && is_array($cached_logs)) {
+            // Combinar logs cacheados con los nuevos (evitando duplicados)
+            $existing_count = count($this->logs);
+            $cached_count = count($cached_logs);
+            
+            // Si tenemos logs nuevos, mantenerlos. Si no, usar los cacheados
+            if ($existing_count <= 1) { // Solo tiene el log inicial
+                $this->logs = $cached_logs;
+            }
+        }
+    }
+    
+    /**
      * Obtener logs formateados para el frontend
      */
     public function get_logs() {
+        // Cargar logs persistidos al inicio
+        $this->load_logs_from_cache();
+        
         return array_map(function($log) {
             $icon = '📋';
             $class = 'info';
@@ -148,7 +182,7 @@ class Ocellaris_Product_Sync {
         $cache_key = $this->products_cache_key . '_' . $this->current_session_id;
         $cached_products = get_transient($cache_key);
         
-        if ($cached_products !== false) {
+        if ($cached_products !== false && is_array($cached_products) && count($cached_products) > 0) {
             $this->log('💾 Productos obtenidos desde caché', 'cache', array(
                 'total' => count($cached_products),
                 'cache_key' => $cache_key
@@ -158,27 +192,88 @@ class Ocellaris_Product_Sync {
         
         $this->log('🌐 Llamando a la API de iPos para obtener productos...', 'api');
         $api_start = microtime(true);
+
+        // Obtener productos paginados
+        $all_products = array();
+        $page = 0;
+        $has_more = true;
+        $total_downloaded = 0;
+
+        while ($has_more) {
+            $this->log("📄 Solicitando página {$page}...", 'api');
+            
+            // Hacer la llamada con parámetro de página
+            $result = $this->ipos_api->get_products($page);
+            
+            if (!$result['success']) {
+                $this->log('❌ Error al obtener productos de iPos en página ' . $page . ': ' . $result['error'], 'error');
+                
+                // Si ya tenemos productos, continuar con los que tenemos
+                if (!empty($all_products)) {
+                    $this->log('⚠️ Continuando con productos ya obtenidos', 'warning');
+                    break;
+                }
+                
+                return false;
+            }
+            
+            $page_products = isset($result['data']['Products']) ? $result['data']['Products'] : array();
+            $page_count = count($page_products);
+            $total_downloaded += $page_count;
+            
+            $this->log("✅ Página {$page} descargada: {$page_count} productos", 'api');
+            
+            if (empty($page_products)) {
+                $has_more = false;
+                $this->log("🏁 Fin de paginación - página {$page} vacía", 'info');
+            } else {
+                $all_products = array_merge($all_products, $page_products);
+                
+                // Determinar si hay más páginas
+                // Si la página tiene menos de 100 productos (o algún límite), asumimos que es la última
+                // O puedes agregar lógica basada en headers de paginación si la API los proporciona
+                if ($page_count < 100) { // Ajusta este número según tu API
+                    $has_more = false;
+                    $this->log("🏁 Última página detectada (menos de 100 productos)", 'info');
+                } else {
+                    $page++;
+                    
+                    // Pequeña pausa para no sobrecargar la API
+                    if ($page % 10 == 0) {
+                        sleep(1);
+                    }
+                }
+            }
+            
+            // Seguridad: límite de páginas para evitar loops infinitos
+            if ($page > 100) {
+                $this->log('⚠️ Límite de páginas alcanzado (100)', 'warning');
+                break;
+            }            
+        }
         
-        $result = $this->ipos_api->get_products();
+        // $result = $this->ipos_api->get_products();
         
         $api_duration = round(microtime(true) - $api_start, 2);
         
-        if (!$result['success']) {
-            $this->log('❌ Error al obtener productos de iPos: ' . $result['error'], 'error');
-            return false;
-        }
-        
-        $all_products = isset($result['data']['Products']) ? $result['data']['Products'] : array();
-        
-        $this->log('✅ Productos descargados de la API', 'api', array(
+        $this->log('✅ Productos descargados de la API', 'success', array(
             'total' => count($all_products),
+            'pages' => $page + 1,
             'duration' => $api_duration . 's',
             'size_mb' => round(strlen(json_encode($all_products)) / 1024 / 1024, 2)
         ));
         
+        if (empty($all_products)) {
+            $this->log('⚠️ No se obtuvieron productos de la API', 'warning');
+            return false;
+        }
+        
         // Guardar en caché
         set_transient($cache_key, $all_products, $this->cache_duration);
-        $this->log('💾 Productos guardados en caché', 'cache', array('key' => $cache_key));
+        $this->log('💾 Productos guardados en caché', 'cache', array(
+            'key' => $cache_key,
+            'count' => count($all_products)
+        ));
         
         return $all_products;
     }
@@ -211,38 +306,69 @@ class Ocellaris_Product_Sync {
         
         $total = count($all_products);
         
-        // Filtrar productos ACTIVE
+        // Filtrar productos ACTIVE y reindexear correctamente
         $this->log('🔍 Filtrando productos activos...', 'info');
-        $active_products = array_filter($all_products, function($product) {
+        $filtered = array_filter($all_products, function($product) {
             return isset($product['Status']) && $product['Status'] === 'ACTIVE';
         });
         
+        // IMPORTANTE: Reindexear array después de filter
+        $active_products = array_values($filtered);
         $active_count = count($active_products);
+        
         $this->log('✅ Filtrado completado', 'success', array(
             'total' => $total,
             'active' => $active_count,
             'inactive' => $total - $active_count
         ));
         
-        // Obtener el lote actual
-        $batch = array_slice($active_products, $offset, $this->batch_size);
-        $batch_count = count($batch);
-        
-        $this->log('📦 Lote actual preparado', 'info', array(
-            'offset' => $offset,
-            'batch_size' => $this->batch_size,
-            'batch_count' => $batch_count
-        ));
-        
-        if (empty($batch)) {
-            $this->log('🎉 ¡Sincronización completada! No hay más productos para procesar', 'success');
+        // Validar que el offset sea válido
+        if ($offset >= $active_count) {
+            $this->log('🎉 ¡Sincronización completada! Todos los productos han sido procesados', 'success', array(
+                'total_processed' => $active_count,
+                'offset' => $offset
+            ));
+            
+            // LIMPIAR SESIÓN SOLO CUANDO TERMINA
+            delete_transient('ocellaris_sync_session_id');
+            
             return array(
                 'success' => true,
                 'completed' => true,
                 'total' => $total,
                 'active' => $active_count,
                 'processed' => $offset,
-                'message' => '✅ Sincronización completa!',
+                'created' => 0,
+                'updated' => 0,
+                'skipped' => 0,
+                'errors' => array(),
+                'message' => '✨ ¡Sincronización 100% completada!',
+                'logs' => $this->get_logs()
+            );
+        }
+        
+        // Obtener el lote actual - VERIFICAR QUE EXISTAN PRODUCTOS
+        $batch = array_slice($active_products, $offset, $this->batch_size);
+        $batch_count = count($batch);
+        
+        $this->log('📦 Lote actual preparado', 'info', array(
+            'offset' => $offset,
+            'batch_size' => $this->batch_size,
+            'batch_count' => $batch_count,
+            'remaining' => $active_count - $offset
+        ));
+        
+        if (empty($batch)) {
+            $this->log('⚠️ Lote vacío - probablemente fin de datos', 'warning');
+            delete_transient('ocellaris_sync_session_id');
+            
+            return array(
+                'success' => true,
+                'completed' => true,
+                'total' => $total,
+                'active' => $active_count,
+                'processed' => $offset,
+                'message' => '✨ ¡Sincronización completada!',
                 'logs' => $this->get_logs()
             );
         }
@@ -258,28 +384,34 @@ class Ocellaris_Product_Sync {
             $product_number = $offset + $index + 1;
             $product_name = isset($product['Name']) ? $product['Name'] : 'Sin nombre';
             
-            $this->log("🔸 [{$product_number}/{$active_count}] Procesando: {$product_name}", 'info');
+            $this->log("🔸 [{$product_number}/{$active_count}] {$product_name}", 'info');
             
-            // Verificar timeout
+            // Verificar timeout - DEJAR MÁS MARGEN
             $elapsed = time() - $this->start_time;
-            if ($elapsed > ($this->max_execution_time - 30)) {
+            if ($elapsed > ($this->max_execution_time - 45)) {
                 $this->log('⏰ Timeout preventivo alcanzado', 'warning', array(
                     'elapsed' => $elapsed . 's',
-                    'max' => $this->max_execution_time . 's'
+                    'max' => $this->max_execution_time . 's',
+                    'next_offset' => $offset + $index
                 ));
                 $this->save_product_map();
+                
+                // NO LIMPIAR SESIÓN - MANTENER PARA PRÓXIMO LOTE
+                $next_offset = $offset + $index;
                 
                 return array(
                     'success' => true,
                     'completed' => false,
                     'total' => $total,
                     'active' => $active_count,
-                    'processed' => $offset + $created + $updated + $skipped,
+                    'processed' => $next_offset,
                     'created' => $created,
                     'updated' => $updated,
                     'skipped' => $skipped,
-                    'next_offset' => $offset + $this->batch_size,
-                    'message' => 'Procesando... timeout preventivo',
+                    'errors' => $errors,
+                    'next_offset' => $next_offset,
+                    'progress_percentage' => round(($next_offset / $active_count) * 100, 1),
+                    'message' => 'Timeout preventivo - continuando con siguiente lote',
                     'logs' => $this->get_logs()
                 );
             }
@@ -288,8 +420,7 @@ class Ocellaris_Product_Sync {
             $sync_result = $this->sync_product($product);
             $sync_duration = round(microtime(true) - $sync_start, 3);
             
-            $this->log("  ⏱️ Producto procesado en {$sync_duration}s", 'info');
-            
+            $this->log("  ⏱️ Procesado en {$sync_duration}s", 'info');
             $this->process_sync_result($sync_result, $created, $updated, $skipped, $errors);
         }
         
@@ -297,33 +428,47 @@ class Ocellaris_Product_Sync {
         $this->save_product_map();
         $this->log('💾 Mapeo de productos guardado', 'cache');
         
-        $next_offset = $offset + $this->batch_size;
+        // IMPORTANTE: Calcular el próximo offset CORRECTAMENTE
+        $next_offset = $offset + $batch_count;
         $has_more = $next_offset < $active_count;
         
         $this->log('📊 Lote completado', 'success', array(
+            'current_offset' => $offset,
+            'batch_processed' => $batch_count,
+            'next_offset' => $next_offset,
+            'has_more' => $has_more,
+            'remaining' => $active_count - $next_offset,
             'created' => $created,
             'updated' => $updated,
-            'skipped' => $skipped,
-            'errors' => count($errors),
-            'has_more' => $has_more
+            'skipped' => $skipped
         ));
+        
+        // NO LIMPIAR SESIÓN si hay más productos
+        if (!$has_more) {
+            $this->log('✨ Todos los productos sincronizados', 'success');
+            delete_transient('ocellaris_sync_session_id');
+        }
         
         return array(
             'success' => true,
             'completed' => !$has_more,
             'total' => $total,
             'active' => $active_count,
-            'processed' => min($next_offset, $active_count),
+            'processed' => $next_offset,
             'created' => $created,
             'updated' => $updated,
             'skipped' => $skipped,
             'errors' => $errors,
             'next_offset' => $has_more ? $next_offset : null,
+            'progress_percentage' => round(($next_offset / $active_count) * 100, 1),
             'message' => sprintf(
-                'Lote procesado: %d creados, %d actualizados, %d omitidos',
+                'Lote completado: %d creados, %d actualizados, %d omitidos (%.1f%% - %d/%d)',
                 $created,
                 $updated,
-                $skipped
+                $skipped,
+                round(($next_offset / $active_count) * 100, 1),
+                $next_offset,
+                $active_count
             ),
             'logs' => $this->get_logs()
         );

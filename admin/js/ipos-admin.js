@@ -152,7 +152,7 @@ jQuery(document).ready(function($) {
         $progress.show();
         $results.hide().removeClass('success error').html('');
         
-        // Crear contenedor de logs con mejor estilo
+        // contenedor de logs
         let $logsContainer = $('.sync-logs-container');
         if ($logsContainer.length === 0) {
             $logsContainer = $('<div class="sync-logs-container"></div>');
@@ -172,8 +172,9 @@ jQuery(document).ready(function($) {
         let allErrors = [];
         let batchCount = 0;
         let startTime = Date.now();
+        let lastLogCount = 0; // NUEVO: para trackear logs nuevos
         
-        // Función para agregar logs con mejor formato
+        // agregar log
         function addLog(message, className = 'info') {
             const timestamp = new Date().toLocaleTimeString('es-AR');
             const $logEntry = $('<div class="log-entry ' + className + '"></div>')
@@ -186,7 +187,24 @@ jQuery(document).ready(function($) {
             }
         }
         
-        // Función para formatear tiempo
+        // NUEVO: procesar y mostrar logs del servidor
+        function processServerLogs(logs) {
+            if (!logs || !Array.isArray(logs)) {
+                return;
+            }
+            
+            // Solo mostrar logs nuevos desde la última vez
+            const newLogs = logs.slice(lastLogCount);
+            lastLogCount = logs.length;
+            
+            newLogs.forEach(function(logObj) {
+                if (logObj.message) {
+                    addLog(logObj.message, logObj.class || 'info');
+                }
+            });
+        }
+        
+        // formatear duración
         function formatDuration(ms) {
             const seconds = Math.floor(ms / 1000);
             const minutes = Math.floor(seconds / 60);
@@ -198,7 +216,7 @@ jQuery(document).ready(function($) {
             return `${seconds}s`;
         }
         
-        // Función para procesar un lote
+        // procesar un lote
         function processBatch() {
             batchCount++;
             const batchStartTime = Date.now();
@@ -221,6 +239,11 @@ jQuery(document).ready(function($) {
                     if (response.success) {
                         const data = response.data;
                         
+                        // NUEVO: Mostrar logs del servidor PRIMERO
+                        if (data.logs && Array.isArray(data.logs)) {
+                            processServerLogs(data.logs);
+                        }
+                        
                         // Guardar valores globales
                         totalProducts = data.total;
                         totalActive = data.active;
@@ -231,14 +254,6 @@ jQuery(document).ready(function($) {
                         
                         if (data.errors && data.errors.length > 0) {
                             allErrors = allErrors.concat(data.errors);
-                        }
-                        
-                        // Mostrar logs del servidor (NUEVO: con formato)
-                        if (data.logs && Array.isArray(data.logs)) {
-                            data.logs.forEach(function(log) {
-                                const logClass = log.class || 'info';
-                                addLog(log.message, logClass);
-                            });
                         }
                         
                         // Actualizar barra de progreso
