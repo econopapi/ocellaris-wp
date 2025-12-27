@@ -390,4 +390,208 @@ jQuery(document).ready(function($) {
         addLog(`📅 ${new Date().toLocaleString('es-AR')}`, 'start');
         processBatch();
     });
+
+
+    $('#sync-stock').on('click', function() {
+        const $btn = $(this);
+        const $progress = $('#stock-sync-progress');
+        const $results = $('#stock-sync-results');
+        
+        if (!confirm('¿Querés sincronizar el stock de iPos ahora? Esto puede tardar varios minutos dependiendo de la cantidad de productos.')) {
+            return;
+        }
+        
+        $btn.addClass('loading').prop('disabled', true);
+        $progress.show();
+        $results.hide().removeClass('success error').html('');
+        
+        let $logsContainer = $('.sync-logs-container');
+        if ($logsContainer.length === 0) {
+            $logsContainer = $('<div class="sync-logs-container"></div>');
+            $progress.after($logsContainer);
+        } else {
+            $logsContainer.empty().show();
+        }
+        
+        let offset = 0;
+        let totalProcessed = 0;
+        let totalStock = 0;
+        let allUpdated = 0;
+        let allFailed = 0;
+        let allErrors = [];
+        let batchCount = 0;
+        let startTime = Date.now();
+        let lastLogCount = 0;
+        
+        function addLog(message, className = 'info') {
+            const timestamp = new Date().toLocaleTimeString('es-AR');
+            const $logEntry = $('<div class="log-entry ' + className + '"></div>')
+                .html(message);
+            $logsContainer.append($logEntry);
+            
+            if ($logsContainer[0].scrollHeight - $logsContainer.scrollTop() < $logsContainer.height() + 100) {
+                $logsContainer.scrollTop($logsContainer[0].scrollHeight);
+            }
+        }
+        
+        function processServerLogs(logs) {
+            if (!logs || !Array.isArray(logs)) {
+                return;
+            }
+            
+            const newLogs = logs.slice(lastLogCount);
+            lastLogCount = logs.length;
+            
+            newLogs.forEach(function(logObj) {
+                if (logObj.message) {
+                    addLog(logObj.message, logObj.class || 'info');
+                }
+            });
+        }
+        
+        function formatDuration(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            
+            if (minutes > 0) {
+                return `${minutes}m ${remainingSeconds}s`;
+            }
+            return `${seconds}s`;
+        }
+        
+        function processBatch() {
+            batchCount++;
+            const batchStartTime = Date.now();
+            
+            addLog(`<strong>🚀 Lote #${batchCount} - Sincronizando stock...</strong> (offset: ${offset})`, 'batch-start');
+            
+            $.ajax({
+                url: iposAdmin.ajax_url,
+                type: 'POST',
+                dataType: 'json',
+                timeout: 300000,
+                data: {
+                    action: 'sync_ipos_stock',
+                    nonce: iposAdmin.nonce,
+                    offset: offset
+                },
+                success: function(response) {
+                    const batchDuration = Date.now() - batchStartTime;
+                    
+                    if (response.success) {
+                        const data = response.data;
+                        
+                        if (data.logs && Array.isArray(data.logs)) {
+                            processServerLogs(data.logs);
+                        }
+                        
+                        totalStock = data.total;
+                        totalProcessed = data.processed;
+                        allUpdated += data.updated || 0;
+                        allFailed += data.failed || 0;
+                        
+                        if (data.errors && data.errors.length > 0) {
+                            allErrors = allErrors.concat(data.errors);
+                        }
+                        
+                        const percentage = totalStock > 0 ? (totalProcessed / totalStock) * 100 : 0;
+                        $('#stock-progress-fill').css('width', percentage + '%');
+                        
+                        const elapsedTime = Date.now() - startTime;
+                        const estimatedTotal = totalProcessed > 0 ? (elapsedTime / totalProcessed) * totalStock : 0;
+                        const remainingTime = estimatedTotal - elapsedTime;
+                        
+                        $('#stock-progress-text').html(
+                            `<strong>${totalProcessed} / ${totalStock}</strong> productos procesados ` +
+                            `(<strong>${percentage.toFixed(1)}%</strong>)<br>` +
+                            `<small>Tiempo transcurrido: ${formatDuration(elapsedTime)} | ` +
+                            `Estimado restante: ${remainingTime > 0 ? formatDuration(remainingTime) : 'calculando...'}</small>`
+                        );
+                        
+                        $('#stock-sync-message').html(
+                            `<strong>${data.message}</strong><br>` +
+                            `✅ Actualizados: <strong>${allUpdated}</strong> | ` +
+                            `❌ Fallidos: <strong>${allFailed}</strong> | ` +
+                            `⚠️ Errores: <strong>${allErrors.length}</strong>`
+                        );
+                        
+                        addLog(
+                            `<strong>✅ Lote #${batchCount} completado en ${formatDuration(batchDuration)}</strong> - ` +
+                            `Actualizados: ${data.updated}, Fallidos: ${data.failed}`,
+                            'batch-complete'
+                        );
+                        
+                        if (!data.completed && data.next_offset !== null) {
+                            offset = data.next_offset;
+                            addLog('⏳ Esperando 1 segundo antes del siguiente lote...', 'waiting');
+                            setTimeout(processBatch, 1000);
+                        } else {
+                            completeSyncProcess(data);
+                        }
+                    } else {
+                        $progress.hide();
+                        const errorMsg = (response.data && response.data.message) ? response.data.message : 'Error desconocido';
+                        addLog(`<strong>❌ Error en sincronización:</strong> ${errorMsg}`, 'error');
+                        
+                        $results.addClass('error')
+                            .html(`<h3>❌ Error en la sincronización</h3><p>${errorMsg}</p>`)
+                            .show();
+                        $btn.removeClass('loading').prop('disabled', false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $progress.hide();
+                    
+                    let errorDetail = error;
+                    if (status === 'timeout') {
+                        errorDetail = 'Timeout de servidor';
+                    }
+                    
+                    addLog(`<strong>❌ Error AJAX:</strong> ${errorDetail}`, 'error');
+                    
+                    $results.addClass('error')
+                        .html(`<h3>❌ Error de conexión</h3><p>${errorDetail}</p>`)
+                        .show();
+                    $btn.removeClass('loading').prop('disabled', false);
+                }
+            });
+        }
+        
+        function completeSyncProcess(finalData) {
+            $progress.hide();
+            
+            const totalTime = Date.now() - startTime;
+            
+            addLog(`<strong>🎉 ¡Sincronización de stock completada!</strong>`, 'final-success');
+            addLog(`⏱️ Tiempo total: <strong>${formatDuration(totalTime)}</strong>`, 'final-info');
+            
+            let html = '<h3>🎉 ¡Sincronización de stock completada!</h3>';
+            html += `<p><strong>⏱️ Tiempo total:</strong> ${formatDuration(totalTime)}</p>`;
+            html += '<ul>';
+            html += `<li><strong>Productos sincronizados:</strong> ${totalStock}</li>`;
+            html += `<li><strong>✅ Stock actualizado:</strong> ${allUpdated}</li>`;
+            html += `<li><strong>❌ Errores:</strong> ${allFailed}</li>`;
+            html += '</ul>';
+            
+            if (allErrors.length > 0) {
+                html += '<h4>⚠️ Errores encontrados:</h4><ul class="error-list">';
+                allErrors.forEach(function(error) {
+                    html += '<li>' + error + '</li>';
+                });
+                html += '</ul>';
+            }
+            
+            html += '<p style="margin-top: 20px; padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; color: #155724;">' +
+                    '✅ La sincronización de stock se completó exitosamente.' +
+                    '</p>';
+            
+            $results.addClass('success').html(html).show();
+            $btn.removeClass('loading').prop('disabled', false);
+        }
+        
+        addLog(`<strong>🚀 Iniciando sincronización de stock...</strong>`, 'start');
+        addLog(`📅 ${new Date().toLocaleString('es-AR')}`, 'start');
+        processBatch();
+    });    
 });

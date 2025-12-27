@@ -24,6 +24,7 @@ class Ocellaris_IPos_Admin {
         add_action('wp_ajax_sync_ipos_categories', array($this, 'ajax_sync_categories'));
         add_action('wp_ajax_clear_ipos_cache', array($this, 'ajax_clear_cache'));
         add_action('wp_ajax_sync_ipos_products', array($this, 'ajax_sync_products'));
+        add_action('wp_ajax_sync_ipos_stock', array($this, 'ajax_sync_stock'));
     }
     
     /**
@@ -154,6 +155,28 @@ class Ocellaris_IPos_Admin {
                     </button>
                 </div>
                 
+                <div class="ipos-sync-card">
+                    <h2>Sincronización de Stock</h2>
+                    <p>Sincroniza el inventario desde iPos a WooCommerce. Este proceso actualiza el stock de todos los productos sincronizados.</p>
+                    <p><strong>Nota:</strong> Asegurate de haber sincronizado los productos primero.</p>
+                    
+                    <div id="stock-sync-progress" style="display: none;">
+      
+                    <div class="sync-spinner"></div>
+                        <p id="stock-sync-message">Sincronizando stock...</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="stock-progress-fill" style="width: 0%"></div>
+                        </div>
+                        <p id="stock-progress-text">0 / 0 procesados</p>
+                    </div>
+                    
+                    <div id="stock-sync-results" style="display: none;"></div>
+                    
+                    <button type="button" class="button button-primary" id="sync-stock">
+                        🔄 Sincronizar Stock Ahora
+                    </button>
+                </div>
+
                 <div class="ipos-stats-card">
                     <h2>Estadísticas</h2>
                     <?php $this->render_stats(); ?>
@@ -376,7 +399,7 @@ class Ocellaris_IPos_Admin {
         check_ajax_referer('ipos_sync_nonce', 'nonce');
         
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('No tenés permisos para hacer esto.');
+            wp_send_json_error('No tienes permisos para hacer esta acción.');
         }
         
         $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
@@ -391,6 +414,22 @@ class Ocellaris_IPos_Admin {
             update_option('ocellaris_ipos_last_product_sync', time());
         }
         
+        wp_send_json_success($result);
+    }
+
+
+    /**
+     * AJAX: Sincronizar stock
+     */
+    public function ajax_sync_stock(){
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        if(!current_user_can('manage_options')){
+            wp_send_json_error('No tienes permisos para hacer esta acción.');
+        }
+        $offset = isset($_POST['offset'])? intval($_POST['offset']): 0;
+        require_once get_stylesheet_directory().'/includes/class-stock-sync.php';
+        $sync = new Ocellaris_Stock_Sync();
+        $result = $sync->sync_all_stock($offset);
         wp_send_json_success($result);
     }
 }
