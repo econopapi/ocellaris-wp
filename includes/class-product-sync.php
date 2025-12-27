@@ -15,9 +15,9 @@ class Ocellaris_Product_Sync {
     private $ipos_api;
     private $category_map = array();
     private $product_map = array();
-    private $batch_size = 20; // Reducido para mejor control
+    private $batch_size = 20; 
     
-    private $max_execution_time = 99999; // 16.6 min
+    private $max_execution_time = 99999; 
     private $start_time;
     
     // Sistema de logging
@@ -40,7 +40,7 @@ class Ocellaris_Product_Sync {
         @ini_set('max_execution_time', $this->max_execution_time);
         @ini_set('memory_limit', '512M');
         
-        $this->log('🚀 Inicializado Ocellaris_Product_Sync', 'info');
+        $this->log('Inicializado Ocellaris_Product_Sync', 'info');
     }
     
     /**
