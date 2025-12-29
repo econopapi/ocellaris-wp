@@ -256,9 +256,26 @@ class Ocellaris_IPos_API {
         }
         
         $url = $this->base_url . $endpoint;
+        $request_id = uniqid('ipos_', true); // id único para petición
         
         // Timeout más largo para solicitudes grandes (45K líneas)
-        $timeout = (strpos($endpoint, '/products') === 0) ? 120 : 45;
+        $timeout = (strpos($endpoint, '/products') === 0) ? 120 : 75;
+        if (strpos($endpoint, '/stock/movements') === 0) {
+            $timeout = 150;
+        }
+
+        $log_prefix = '[iPos API ' . $request_id . ']';
+        $start_time = microtime(true);
+
+        error_log($log_prefix.' Iniciando petición: '.$method.' '.$url.' (timeout: '.$timeout.'s)');
+
+        if($body){
+            error_log($log_prefix.' Payload: '.print_r($body, true));
+        }
+
+        // hook para monitoreo externo
+        do_action('ocellaris_ipos_before_request', $endpoint, $method, $body, $request_id);
+
         
         $args = array(
             'method' => $method,
@@ -273,10 +290,13 @@ class Ocellaris_IPos_API {
         if ($body && $method !== 'GET') {
             $args['body'] = json_encode($body);
         }
-        
-        error_log('[iPos API] Request: ' . $method . ' ' . $url . ' (timeout: ' . $timeout . 's)');
-        
+
+        // medición de tiempo de conexión
+        $connection_start = microtime(true);
         $response = wp_remote_request($url, $args);
+        $connection_time = round(microtime(true) - $connection_start, 3);
+
+        error_log($log_prefix.' Tiempo de conexión: '.$connection_time.'s');
         
         if (is_wp_error($response)) {
             $error = $response->get_error_message();
@@ -329,5 +349,51 @@ class Ocellaris_IPos_API {
      */
     public function is_configured() {
         return !empty($this->api_key);
+    }
+    
+    /**
+     * Actualizar inventario en iPos (movimiento OUT para ventas)
+     */
+    public function update_inventory($product_id, $variation_id, $quantity, $notes = '', $location_id = '1') {
+        error_log(sprintf(
+            '[iPos API] Actualizando inventario: Product=%s, Variation=%s, Qty=-%d',
+            $product_id,
+            $variation_id,
+            $quantity
+        ));
+        
+        $payload = array(
+            'ProductID' => (string) $product_id,
+            'VariationID' => (string) $variation_id,
+            'LocationID' => (string) $location_id,
+            'Quantity' => (int) $quantity,
+            'Notes' => $notes,
+            'Type' => 'OUT',
+        );
+        
+        $result = $this->make_request('/stock/movements', 'POST', $payload);
+        
+        if (!$result['success']) {
+            return array(
+                'success' => false,
+                'error' => $result['error']
+            );
+        }
+        
+        $data = $result['data'];
+        
+        if (isset($data['Data']) && isset($data['Data']['Quantity'])) {
+            return array(
+                'success' => true,
+                'new_stock' => $data['Data']['Quantity'],
+                'response' => $data
+            );
+        }
+        
+        return array(
+            'success' => false,
+            'error' => 'Respuesta inesperada de la API',
+            'response' => $data
+        );
     }
 }
