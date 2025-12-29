@@ -25,6 +25,12 @@ class Ocellaris_IPos_Admin {
         add_action('wp_ajax_clear_ipos_cache', array($this, 'ajax_clear_cache'));
         add_action('wp_ajax_sync_ipos_products', array($this, 'ajax_sync_products'));
         add_action('wp_ajax_sync_ipos_stock', array($this, 'ajax_sync_stock'));
+        
+        // NUEVO: AJAX handlers para webhooks
+        add_action('wp_ajax_create_ipos_webhook', array($this, 'ajax_create_webhook'));
+        add_action('wp_ajax_delete_ipos_webhook', array($this, 'ajax_delete_webhook'));
+        add_action('wp_ajax_get_webhook_status', array($this, 'ajax_get_webhook_status'));
+        add_action('wp_ajax_reactivate_ipos_webhook', array($this, 'ajax_reactivate_webhook'));
     }
     
     /**
@@ -110,6 +116,50 @@ class Ocellaris_IPos_Admin {
                     <div id="connection-status">
                         <button type="button" class="button button-secondary" id="test-connection">
                             Probar Conexión
+                        </button>
+                    </div>
+                </div>
+
+                <!-- NUEVO: Sección de Webhooks -->
+                <div class="ipos-webhook-card">
+                    <h2>⚡ Webhooks - Sincronización de Ventas</h2>
+                    <p>Los webhooks actualizan automáticamente el inventario en iPos cuando se realiza una venta en WooCommerce.</p>
+                    
+                    <div id="webhook-status-container">
+                        <button type="button" class="button button-secondary" id="refresh-webhook-status">
+                            🔄 Actualizar Estado
+                        </button>
+                    </div>
+                    
+                    <div id="webhook-info" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-left: 4px solid #0073aa; border-radius: 4px;">
+                        <h3 style="margin-top: 0;">Información del Webhook</h3>
+                        <table class="webhook-details" style="width: 100%;">
+                            <tr>
+                                <td style="width: 200px; padding: 8px; font-weight: bold;">Estado:</td>
+                                <td style="padding: 8px;"><span id="webhook-status-badge"></span></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; font-weight: bold;">ID del Webhook:</td>
+                                <td style="padding: 8px;"><code id="webhook-id"></code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; font-weight: bold;">URL de Entrega:</td>
+                                <td style="padding: 8px;"><code id="webhook-url" style="word-break: break-all;"></code></td>
+                            </tr>
+                        </table>
+                        
+                        <div style="margin-top: 20px;">
+                            <button type="button" class="button button-danger" id="delete-webhook" style="background-color: #dc3545; border-color: #dc3545; color: white;">
+                                🗑️ Eliminar Webhook
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="webhook-inactive" style="display: none; margin-top: 20px; padding: 15px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                        <p><strong>⚠️ Webhook no configurado</strong></p>
+                        <p>Para activar la sincronización automática de ventas, necesitas crear un webhook.</p>
+                        <button type="button" class="button button-primary" id="create-webhook">
+                            ✨ Crear Webhook Ahora
                         </button>
                     </div>
                 </div>
@@ -432,6 +482,77 @@ class Ocellaris_IPos_Admin {
         $result = $sync->sync_all_stock($offset);
         wp_send_json_success($result);
     }
+
+    /**
+     * AJAX: Crear webhook
+     */
+    public function ajax_create_webhook() {
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('No tienes permisos para hacer esta acción.');
+        }
+        
+        $result = Ocellaris_Webhook_Handler::create_webhook();
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result);
+        }
+    }
+    
+    /**
+     * AJAX: Eliminar webhook
+     */
+    public function ajax_delete_webhook() {
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('No tienes permisos para hacer esta acción.');
+        }
+        
+        $result = Ocellaris_Webhook_Handler::delete_webhook();
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result);
+        }
+    }
+    
+    /**
+     * AJAX: Obtener estado del webhook
+     */
+    public function ajax_get_webhook_status() {
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('No tienes permisos para hacer esto.');
+        }
+        
+        $status = Ocellaris_Webhook_Handler::get_webhook_status();
+        wp_send_json_success($status);
+    }
+
+    /**
+     * AJAX: Reactivar webhook
+     */
+    public function ajax_reactivate_webhook() {
+        check_ajax_referer('ipos_sync_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('No tienes permisos para hacer esta acción.');
+        }
+        
+        $result = Ocellaris_Webhook_Handler::reactivate_webhook();
+        
+        if ($result['success']) {
+            wp_send_json_success($result);
+        } else {
+            wp_send_json_error($result);
+        }
+    }    
 }
 
 // Inicializar

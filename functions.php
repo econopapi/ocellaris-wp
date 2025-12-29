@@ -712,6 +712,9 @@ add_action('wp_head', 'ocellaris_text_bar_frontend_styles');
 // Verificar que WooCommerce esté activo
 if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
     
+    // Cargar la clase Webhook Handler
+    require_once get_stylesheet_directory() . '/includes/class-webhook-handler.php';
+    
     // Cargar el admin de iPos
     if (is_admin()) {
         require_once get_stylesheet_directory() . '/admin/ipos-integration-admin.php';

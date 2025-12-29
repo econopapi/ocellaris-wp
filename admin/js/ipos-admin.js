@@ -594,4 +594,219 @@ jQuery(document).ready(function($) {
         addLog(`📅 ${new Date().toLocaleString('es-AR')}`, 'start');
         processBatch();
     });    
+    
+    // ============================================
+    // WEBHOOK HANDLERS
+    // ============================================
+    
+    // Actualizar estado del webhook al cargar
+    function updateWebhookStatus() {
+        $.ajax({
+            url: iposAdmin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'get_webhook_status',
+                nonce: iposAdmin.nonce
+            },
+            success: function(response) {
+                const status = response.data;
+                
+                // Si hay webhook_id, mostrar info (activo o inactivo)
+                if (status.webhook_id) {
+                    $('#webhook-info').show();
+                    $('#webhook-inactive').hide();
+                    
+                    // Actualizar badge
+                    let badgeHTML = '';
+                    if (status.active) {
+                        badgeHTML = '<span class="webhook-status-active" style="background: #28a745; color: white; padding: 4px 8px; border-radius: 3px; font-weight: bold;">✅ Activo</span>';
+                    } else {
+                        badgeHTML = '<span class="webhook-status-inactive" style="background: #ffc107; color: #000; padding: 4px 8px; border-radius: 3px; font-weight: bold;">⚠️ ' + status.status.toUpperCase() + '</span>';
+                    }
+                    $('#webhook-status-badge').html(badgeHTML);
+                    
+                    // Actualizar información
+                    $('#webhook-id').text(status.webhook_id);
+                    $('#webhook-url').text(status.delivery_url || 'N/A');
+                    
+                    // Mostrar botones según estado
+                    let actionButtons = '';
+                    if (status.active) {
+                        actionButtons = '<button type="button" class="button button-danger" id="delete-webhook" style="background-color: #dc3545; border-color: #dc3545; color: white;">🗑️ Eliminar Webhook</button>';
+                    } else {
+                        actionButtons = '<button type="button" class="button button-primary" id="reactivate-webhook">🔄 Reactivar Webhook</button> ' +
+                                       '<button type="button" class="button button-danger" id="delete-webhook" style="background-color: #dc3545; border-color: #dc3545; color: white; margin-left: 10px;">🗑️ Eliminar Webhook</button>';
+                    }
+                    
+                    $('#webhook-info div:last-child').html(actionButtons);
+                } else {
+                    // No hay webhook, mostrar opción de crear
+                    $('#webhook-info').hide();
+                    $('#webhook-inactive').show();
+                }
+            },
+            error: function() {
+                $('#webhook-status-container').html(
+                    '<div class="notice notice-error"><p>Error al cargar el estado del webhook.</p></div>'
+                );
+            }
+        });
+    }
+    // function updateWebhookStatus() {
+    //     $.ajax({
+    //         url: iposAdmin.ajax_url,
+    //         type: 'POST',
+    //         data: {
+    //             action: 'get_webhook_status',
+    //             nonce: iposAdmin.nonce
+    //         },
+    //         success: function(response) {
+    //             const status = response.data;
+                
+    //             if (status.active) {
+    //                 // Mostrar información del webhook
+    //                 $('#webhook-info').show();
+    //                 $('#webhook-inactive').hide();
+                    
+    //                 // Actualizar badge de estado
+    //                 const badge = $('<span class="webhook-status-active">✅ Activo</span>');
+    //                 $('#webhook-status-badge').html(badge);
+                    
+    //                 // Actualizar información
+    //                 $('#webhook-id').text(status.webhook_id);
+    //                 $('#webhook-url').text(status.delivery_url);
+    //             } else {
+    //                 // Mostrar opción de crear webhook
+    //                 $('#webhook-info').hide();
+    //                 $('#webhook-inactive').show();
+    //                 $('#webhook-status-container').html(
+    //                     '<button type="button" class="button button-secondary" id="refresh-webhook-status">' +
+    //                     '🔄 Actualizar Estado</button>'
+    //                 );
+    //             }
+    //         },
+    //         error: function() {
+    //             $('#webhook-status-container').html(
+    //                 '<div class="notice notice-error"><p>Error al cargar el estado del webhook.</p></div>'
+    //             );
+    //         }
+    //     });
+    // }
+
+    // Reactivar webhook
+    $(document).on('click', '#reactivate-webhook', function() {
+        const $btn = $(this);
+        
+        if (!confirm('¿Querés reactivar el webhook?')) {
+            return;
+        }
+        
+        $btn.addClass('loading').prop('disabled', true);
+        
+        $.ajax({
+            url: iposAdmin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'reactivate_ipos_webhook',
+                nonce: iposAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('✅ Webhook reactivado exitosamente!');
+                    updateWebhookStatus();
+                } else {
+                    alert('❌ Error: ' + (response.data?.message || 'Error desconocido'));
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('❌ Error al reactivar webhook: ' + error);
+            },
+            complete: function() {
+                $btn.removeClass('loading').prop('disabled', false);
+            }
+        });
+    });    
+    
+    // Crear webhook
+    $(document).on('click', '#create-webhook', function() {
+        const $btn = $(this);
+        
+        if (!confirm('¿Querés crear el webhook para sincronización automática de ventas?')) {
+            return;
+        }
+        
+        $btn.addClass('loading').prop('disabled', true);
+        
+        $.ajax({
+            url: iposAdmin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'create_ipos_webhook',
+                nonce: iposAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const data = response.data;
+                    alert('✅ Webhook creado exitosamente!\n\nID: ' + data.webhook_id);
+                    updateWebhookStatus();
+                } else {
+                    alert('❌ Error: ' + response.data.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('❌ Error al crear webhook: ' + error);
+            },
+            complete: function() {
+                $btn.removeClass('loading').prop('disabled', false);
+            }
+        });
+    });
+    
+    // Eliminar webhook
+    $(document).on('click', '#delete-webhook', function() {
+        const $btn = $(this);
+        
+        if (!confirm('⚠️ ¿Estás seguro que querés eliminar el webhook?\n\nLa sincronización automática de ventas se desactivará.')) {
+            return;
+        }
+        
+        $btn.addClass('loading').prop('disabled', true);
+        
+        $.ajax({
+            url: iposAdmin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'delete_ipos_webhook',
+                nonce: iposAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('✅ Webhook eliminado correctamente.');
+                    updateWebhookStatus();
+                } else {
+                    alert('❌ Error: ' + response.data.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert('❌ Error al eliminar webhook: ' + error);
+            },
+            complete: function() {
+                $btn.removeClass('loading').prop('disabled', false);
+            }
+        });
+    });
+    
+    // Actualizar estado del webhook
+    $(document).on('click', '#refresh-webhook-status', function() {
+        const $btn = $(this);
+        $btn.addClass('loading').prop('disabled', true);
+        
+        setTimeout(function() {
+            updateWebhookStatus();
+            $btn.removeClass('loading').prop('disabled', false);
+        }, 500);
+    });
+    
+    // Cargar estado inicial del webhook
+    updateWebhookStatus();
 });
