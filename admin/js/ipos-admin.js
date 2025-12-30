@@ -809,4 +809,62 @@ jQuery(document).ready(function($) {
     
     // Cargar estado inicial del webhook
     updateWebhookStatus();
+
+    // Render System Health
+    function renderSystemHealth(data) {
+        const $container = $('#system-health');
+        if (!$container.length) return;
+
+        const overall = data.summary?.overall || 'warn';
+        const msg = data.summary?.message || 'Estado del sistema';
+
+        let html = '';
+        html += `<div class="system-health-summary"><span class="status-dot ${overall === 'ok' ? 'ok' : (overall === 'error' ? 'error' : 'warn')}"></span>${msg}</div>`;
+        html += '<ul class="health-list">';
+        (data.items || []).forEach(function(item) {
+            const st = item.status || 'warn';
+            html += `
+                <li class="health-item">
+                    <div class="label">${item.label}</div>
+                    <div class="value">
+                        <span class="health-badge ${st}">${st.toUpperCase()}</span>
+                        <span class="detail">${item.detail || ''}</span>
+                    </div>
+                </li>`;
+        });
+        html += '</ul>';
+
+        $container.html(html);
+    }
+
+    // Actualizar System Health automáticamente
+    function updateSystemHealth() {
+        const $container = $('#system-health');
+        if (!$container.length) return;
+
+        $container.html('<div class="health-loading"><span class="sync-spinner"></span> Comprobando estado del sistema...</div>');
+
+        $.ajax({
+            url: iposAdmin.ajax_url,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'get_ipos_system_health',
+                nonce: iposAdmin.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    renderSystemHealth(response.data);
+                } else {
+                    $container.html('<div class="connection-error">❌ No se pudo cargar el System Health.</div>');
+                }
+            },
+            error: function() {
+                $container.html('<div class="connection-error">❌ Error de conexión al cargar el System Health.</div>');
+            }
+        });
+    }
+
+    // Ejecutar al cargar
+    updateSystemHealth();
 });
