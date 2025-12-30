@@ -113,8 +113,8 @@ add_action('wp_enqueue_scripts', 'ocellaris_custom_footer_assets');
 function ocellaris_register_menus() {
 	register_nav_menus(
 		array(
-			'sidebar-menu' => __('Sidebar Menu (Categorías)', 'ocellaris-custom-astra'),
-			'quick-links-menu' => __('Quick Links Menu', 'ocellaris-custom-astra'),
+			'sidebar-menu' => __('Ocellaris Main Menu: Sidebar Menu (Categorías)', 'ocellaris-custom-astra'),
+			'quick-links-menu' => __('Ocellaris Main Menu: Quick Links Menu', 'ocellaris-custom-astra'),
 		)
 	);
 }
@@ -703,6 +703,9 @@ function ocellaris_text_bar_frontend_styles() {
 }
 add_action('wp_head', 'ocellaris_text_bar_frontend_styles');
 
+/**
+ * FIN DE OCELLARIS CUSTOM TOP TEXT BAR
+ */
 
 /** 
  * INTEGRACIÓN IPOS
@@ -752,3 +755,35 @@ if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_
 /**
  * FIN DE INTEGRACIÓN IPOS
  */
+
+add_action('before_delete_post', 'ocellaris_delete_product_images', 10, 1);
+
+function ocellaris_delete_product_images($post_id) {
+
+    // Solo productos
+    if (get_post_type($post_id) !== 'product') {
+        return;
+    }
+
+    // Evitar ejecuciones duplicadas
+    if (wp_is_post_revision($post_id)) {
+        return;
+    }
+
+    // Imagen destacada
+    $thumbnail_id = get_post_thumbnail_id($post_id);
+    if ($thumbnail_id) {
+        wp_delete_attachment($thumbnail_id, true);
+    }
+
+    // Galería del producto
+    $gallery_ids = get_post_meta($post_id, '_product_image_gallery', true);
+
+    if (!empty($gallery_ids)) {
+        $gallery_ids = explode(',', $gallery_ids);
+
+        foreach ($gallery_ids as $image_id) {
+            wp_delete_attachment((int) $image_id, true);
+        }
+    }
+}
