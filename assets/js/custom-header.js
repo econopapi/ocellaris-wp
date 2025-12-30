@@ -14,109 +14,7 @@
         const submenuPanel = $('.ocellaris-submenu-panel');
         const submenuContent = $('.submenu-panel-content');
 
-        // Datos de submenús (acá podés agregar más categorías)
-        const submenuData = {
-            'aquariums': {
-                title: 'Acuarios y soportes',
-                items: [
-                    { title: 'Todos los productos', link: '#' },
-                    { title: 'Rimless', link: '#' },
-                    { title: 'Península', link: '#' },
-                    { title: 'Cubos', link: '#' },
-                    { title: 'Bases', link: '#' },
-                    { title: 'Frag Tanks', link: '#' },
-                    { title: 'Stands & Canopies', link: '#' }
-                ]
-            },
-            'lighting': {
-                title: 'Iluminación',
-                groups: [
-                    {
-                        title: 'LED',
-                        items: [
-                            { title: 'LED Fixtures', link: '#' },
-                            { title: 'LED Strips', link: '#' },
-                            { title: 'Mounting Arms', link: '#' }
-                        ]
-                    },
-                    {
-                        title: 'Traditional',
-                        items: [
-                            { title: 'Hybrid', link: '#' },
-                            { title: 'T5 Fluorescent', link: '#' },
-                            { title: 'Ballasts', link: '#' },
-                            { title: 'Bulbs', link: '#' },
-                            { title: 'Fixtures', link: '#' }
-                        ]
-                    },
-                    {
-                        title: 'Other',
-                        items: [
-                            { title: 'Refugium Lighting', link: '#' },
-                            { title: 'Par Meters', link: '#' }
-                        ]
-                    }
-                ]
-            },
-            'pumps': {
-                title: 'Pumps & Powerheads',
-                items: [
-                    { title: 'All Pumps', link: '#' },
-                    { title: 'Return Pumps', link: '#' },
-                    { title: 'Feed Pumps', link: '#' },
-                    { title: 'Wavemakers', link: '#' },
-                    { title: 'Dosing Pumps', link: '#' }
-                ]
-            },
-            'plumbing': {
-                title: 'Plumbing',
-                items: [
-                    { title: 'Pipes & Fittings', link: '#' },
-                    { title: 'Bulkheads', link: '#' },
-                    { title: 'Valves', link: '#' },
-                    { title: 'Unions', link: '#' },
-                    { title: 'Check Valves', link: '#' }
-                ]
-            },
-            'controllers': {
-                title: 'Controllers & Testing',
-                items: [
-                    { title: 'Aquarium Controllers', link: '#' },
-                    { title: 'Test Kits', link: '#' },
-                    { title: 'Probes & Sensors', link: '#' },
-                    { title: 'Monitors', link: '#' }
-                ]
-            },
-            'additives': {
-                title: 'Additives',
-                items: [
-                    { title: 'All Additives', link: '#' },
-                    { title: 'Calcium', link: '#' },
-                    { title: 'Alkalinity', link: '#' },
-                    { title: 'Magnesium', link: '#' },
-                    { title: 'Trace Elements', link: '#' }
-                ]
-            },
-            'reverse-osmosis': {
-                title: 'Reverse Osmosis',
-                items: [
-                    { title: 'RO/DI Systems', link: '#' },
-                    { title: 'Replacement Filters', link: '#' },
-                    { title: 'Accessories', link: '#' }
-                ]
-            },
-            'salt': {
-                title: 'Salt & Maintenance',
-                items: [
-                    { title: 'Salt Mix', link: '#' },
-                    { title: 'Water Changes', link: '#' },
-                    { title: 'Cleaners', link: '#' },
-                    { title: 'Maintenance Tools', link: '#' }
-                ]
-            }
-        };
-
-        // Abrir sidebar
+        // Open sidebar
         menuToggle.on('click', function() {
             sidebarMenu.addClass('active');
             sidebarOverlay.addClass('active');
@@ -153,53 +51,120 @@
             }
         });
 
-        // Manejar click en categorías con submenú
-        $('.sidebar-menu-list .menu-item-has-children > a').on('click', function(e) {
-            e.preventDefault();
-            
-            const $menuItem = $(this).parent();
-            const category = $(this).data('category');
-            const data = submenuData[category];
+        // Handle click on sidebar categories
+        $('.sidebar-menu-list').on('click', '.menu-item > a', function(e) {
+            const $link = $(this);
+            const $menuItem = $link.parent();
+            const catId = $link.data('cat-id');
+            const href = $link.attr('href');
+            const $subMenu = $menuItem.children('.sub-menu');
+            const hasSubMenu = $subMenu.length > 0;
 
-            // Si clickean la misma categoría, cerrar el panel
+            // Si no es categoría ni tiene hijos, comportamiento normal
+            if (!catId && !hasSubMenu) return;
+
+            e.preventDefault();
+
+            // Toggle activo
             if ($menuItem.hasClass('active')) {
                 $menuItem.removeClass('active');
-                submenuPanel.removeClass('active');
+                $('.sidebar-menu-list .menu-item').removeClass('active');
+                $('.ocellaris-submenu-panel').removeClass('active');
                 return;
             }
-
-            // Activar categoría
             $('.sidebar-menu-list .menu-item').removeClass('active');
             $menuItem.addClass('active');
 
-            // Generar contenido del submenú
-            if (data) {
-                let html = '<h4>' + data.title + '</h4>';
-                
-                if (data.groups) {
-                    // Si tiene grupos (como Lighting)
-                    data.groups.forEach(group => {
-                        html += '<div class="submenu-group">';
-                        html += '<h5>' + group.title + '</h5>';
-                        html += '<ul>';
-                        group.items.forEach(item => {
-                            html += '<li><a href="' + item.link + '">' + item.title + '</a></li>';
-                        });
-                        html += '</ul>';
-                        html += '</div>';
-                    });
-                } else {
-                    // Si es lista simple
-                    html += '<ul>';
-                    data.items.forEach(item => {
-                        html += '<li><a href="' + item.link + '">' + item.title + '</a></li>';
-                    });
-                    html += '</ul>';
+            const title = ($link.text() || '').trim();
+
+            // Caso 1: el usuario creó hijos en Menús (curado manualmente)
+            if (hasSubMenu) {
+                const $children = $subMenu.children('li.menu-item');
+
+                // Si no hay hijos reales, navegar a la categoría
+                if (!$children.length) {
+                    window.location.href = href;
+                    return;
                 }
 
-                submenuContent.html(html);
-                submenuPanel.addClass('active');
+                // Construir panel con hijos
+                let html = '<h4>' + title + '</h4>';
+                $children.each(function() {
+                    const $child = $(this);
+                    const $a = $child.children('a');
+                    const childTitle = ($a.text() || '').trim();
+                    const $grand = $child.children('.sub-menu');
+
+                    if ($grand.length) {
+                        html += '<div class="submenu-group"><h5>' + childTitle + '</h5><ul>';
+                        $grand.children('li.menu-item').each(function() {
+                            const $ga = $(this).children('a');
+                            html += '<li><a href="' + $ga.attr('href') + '">' + ($ga.text() || '').trim() + '</a></li>';
+                        });
+                        html += '</ul></div>';
+                    } else {
+                        html += '<ul><li><a href="' + $a.attr('href') + '">' + childTitle + '</a></li></ul>';
+                    }
+                });
+
+                $('.submenu-panel-content').html(html);
+                $('.ocellaris-submenu-panel').addClass('active');
+                return;
             }
+
+            // Caso 2: sin hijos en Menús -> consultar por AJAX y abrir solo si hay subcategorías
+            if (typeof OcellarisHeader === 'undefined') {
+                // Fallback: navegar si no hay AJAX disponible
+                window.location.href = href;
+                return;
+            }
+
+            $.ajax({
+                url: OcellarisHeader.ajaxUrl,
+                method: 'POST',
+                data: {
+                    action: 'ocellaris_get_subcategories',
+                    nonce: OcellarisHeader.nonce,
+                    catId: catId
+                }
+            }).done(function(resp) {
+                // En error o sin datos, navegar
+                if (!resp || !resp.success || !resp.data) {
+                    window.location.href = href;
+                    return;
+                }
+
+                const data = resp.data;
+                const groups = Array.isArray(data.groups) ? data.groups : [];
+                const hasItems = groups.some(function(g) {
+                    return Array.isArray(g.items) && g.items.length > 0;
+                });
+
+                // Si no hay subcategorías, navegar
+                if (!hasItems) {
+                    window.location.href = href;
+                    return;
+                }
+
+                // Construir y abrir el panel
+                let out = '<h4>' + (data.title || title) + '</h4>';
+                groups.forEach(function(group) {
+                    const hasGroupTitle = group.title && group.title.length;
+                    out += '<div class="submenu-group">';
+                    if (hasGroupTitle) out += '<h5>' + group.title + '</h5>';
+                    out += '<ul>';
+                    (group.items || []).forEach(function(item) {
+                        out += '<li><a href="' + item.link + '">' + item.title + '</a></li>';
+                    });
+                    out += '</ul></div>';
+                });
+
+                $('.submenu-panel-content').html(out);
+                $('.ocellaris-submenu-panel').addClass('active');
+            }).fail(function() {
+                // Fallback ante fallo de red
+                window.location.href = href;
+            });
         });
 
         // Cerrar panel de submenú si clickean afuera
@@ -210,37 +175,6 @@
                     $('.sidebar-menu-list .menu-item').removeClass('active');
                 }
             }
-        });
-
-        // Search field enhancement
-        const searchField = $('.search-field');
-        searchField.on('focus', function() {
-            $(this).parent().addClass('search-focused');
-        });
-        searchField.on('blur', function() {
-            $(this).parent().removeClass('search-focused');
-        });
-
-        // Prevenir búsqueda vacía
-        $('.search-form').on('submit', function(e) {
-            if (searchField.val().trim() === '') {
-                e.preventDefault();
-                searchField.focus();
-            }
-        });
-
-        // Animación de scroll del header
-        let lastScroll = 0;
-        $(window).on('scroll', function() {
-            const currentScroll = $(this).scrollTop();
-            
-            if (currentScroll > lastScroll && currentScroll > 100) {
-                $('.ocellaris-header').css('transform', 'translateY(-100%)');
-            } else {
-                $('.ocellaris-header').css('transform', 'translateY(0)');
-            }
-            
-            lastScroll = currentScroll;
         });
     });
 })(jQuery);
