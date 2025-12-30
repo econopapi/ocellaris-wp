@@ -423,6 +423,43 @@
     border-color: #bd2130 !important;
 }
 
+/* Small styling for the extended stats */
+.stats-table {
+    margin-top: 10px;
+}
+
+.stats-table td {
+    padding: 10px 8px;
+}
+
+.stat-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 6px;
+    font-size: 12px;
+    border-radius: 10px;
+    background: #eef7ff;
+    color: #0073aa;
+    border: 1px solid #cde6ff;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.status-dot.ok {
+    background: #28a745;
+}
+
+.status-dot.warn {
+    background: #ffc107;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .sync-logs-container,
@@ -435,4 +472,107 @@
     .log-entry {
         padding: 4px 8px;
     }
+}
+
+.ipos-cards-row {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    margin-bottom: 20px;
+}
+
+.ipos-cards-row .ipos-status-card,
+.ipos-cards-row .ipos-stats-card {
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+/* Responsive: apilar en pantallas pequeñas */
+@media (max-width: 960px) {
+    .ipos-cards-row {
+        flex-direction: column;
+    }
+}
+
+/* ============================================
+   SYSTEM HEALTH STYLES
+   ============================================ */
+
+.system-health-summary {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.health-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.health-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.health-item:last-child {
+    border-bottom: none;
+}
+
+.health-item .label {
+    width: 220px;
+    font-weight: 600;
+    color: #23282d;
+}
+
+.health-item .value {
+    flex: 1;
+}
+
+.health-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 10px;
+    margin-right: 8px;
+    border: 1px solid transparent;
+}
+
+.health-badge.ok {
+    background: #e9f7ef;
+    color: #2f8f4e;
+    border-color: #c9e9d4;
+}
+
+.health-badge.warn {
+    background: #fff7e6;
+    color: #a87100;
+    border-color: #ffe1a3;
+}
+
+.health-badge.error {
+    background: #fdecea;
+    color: #b02a37;
+    border-color: #f5c2c7;
+}
+
+/* Optional: red dot state */
+.status-dot.error {
+    background: #dc3545;
+}
+
+.ocellaris-ipos-wrap .ipos-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ocellaris-ipos-wrap .ipos-logo svg {
+  width: 36px;
+  height: auto;
+}
+.ocellaris-ipos-wrap .ipos-title-text {
+  line-height: 1;
 }
