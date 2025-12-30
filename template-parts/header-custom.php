@@ -173,74 +173,53 @@ function ocellaris_default_quick_links() {
 
 /**
  * Fallback menu para categorías principales
+ * Genera dinámicamente categorías de producto de nivel superior.
  */
 function ocellaris_default_sidebar_menu() {
+	// Obtener categorías top-level
+	$top_cats = get_terms( array(
+		'taxonomy'   => 'product_cat',
+		'hide_empty' => true,
+		'parent'     => 0,
+	) );
+
+	if ( is_wp_error( $top_cats ) || empty( $top_cats ) ) {
+		?>
+		<ul class="sidebar-menu-list">
+			<li class="menu-item">
+				<a href="#">
+					Sin categorías
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="9 18 15 12 9 6"/>
+					</svg>
+				</a>
+			</li>
+		</ul>
+		<?php
+		return;
+	}
+
 	?>
 	<ul class="sidebar-menu-list">
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="aquariums">
-				Acuarios y soportes
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="lighting">
-				Iluminación
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="pumps">
-				Bombas y cabezales de potencia
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="plumbing">
-				Plomería
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="controllers">
-				Controladores y testeo
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="additives">
-				Aditivos
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="reverse-osmosis">
-				Sistemas RO/DI
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
-		<li class="menu-item menu-item-has-children">
-			<a href="#" data-category="salt">
-				Sal y Mantenimiento del agua
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-					<polyline points="9 18 15 12 9 6"/>
-				</svg>
-			</a>
-		</li>
+		<?php foreach ( $top_cats as $cat ) :
+			$children = get_terms( array(
+				'taxonomy'   => 'product_cat',
+				'hide_empty' => true,
+				'parent'     => $cat->term_id,
+			) );
+			$has_children = ! is_wp_error( $children ) && ! empty( $children );
+			$cat_link = get_term_link( $cat );
+			?>
+			<li class="menu-item <?php echo $has_children ? 'menu-item-has-children' : ''; ?>">
+				<a href="<?php echo esc_url( $cat_link ); ?>" data-cat-id="<?php echo esc_attr( $cat->term_id ); ?>">
+					<?php echo esc_html( $cat->name ); ?>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<polyline points="9 18 15 12 9 6"/>
+					</svg>
+				</a>
+				<!-- No renderizamos submenú aquí; se carga dinámicamente o desde elementos hijos del menú si existen -->
+			</li>
+		<?php endforeach; ?>
 	</ul>
 	<?php
 }

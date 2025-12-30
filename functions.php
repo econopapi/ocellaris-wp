@@ -49,6 +49,16 @@ function ocellaris_custom_header_assets() {
 		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
 		true
 	);
+
+	// Localize AJAX data for header JS
+	wp_localize_script(
+		'ocellaris-header-js',
+		'OcellarisHeader',
+		array(
+			'ajaxUrl' => admin_url('admin-ajax.php'),
+			'nonce'   => wp_create_nonce('ocellaris_menu_nonce'),
+		)
+	);
 }
 add_action('wp_enqueue_scripts', 'ocellaris_custom_header_assets');
 
@@ -787,3 +797,119 @@ function ocellaris_delete_product_images($post_id) {
         }
     }
 }
+
+// Add data-cat-id to product_cat links in the sidebar-menu (for curated menus)
+function ocellaris_product_cat_menu_link_attrs( $atts, $item, $args ) {
+	if ( isset($args->theme_location) && $args->theme_location === 'sidebar-menu' && isset($item->object) && $item->object === 'product_cat' ) {
+		$atts['data-cat-id'] = (string) $item->object_id;
+	}
+	return $atts;
+}
+add_filter('nav_menu_link_attributes', 'ocellaris_product_cat_menu_link_attrs', 10, 3);
+
+// AJAX endpoint: get subcategories (children + grandchildren) for a product_cat
+function ocellaris_get_subcategories() {
+	if ( ! isset($_POST['nonce']) || ! wp_verify_nonce( $_POST['nonce'], 'ocellaris_menu_nonce' ) ) {
+		wp_send_json_error( array( 'message' => 'Invalid nonce' ), 403 );
+	}
+
+	$cat_id = isset($_POST['catId']) ? absint($_POST['catId']) : 0;
+	if ( ! $cat_id ) {
+		wp_send_json_error( array( 'message' => 'Invalid category ID' ), 400 );
+	}
+
+	$parent = get_term( $cat_id, 'product_cat' );
+	if ( ! $parent || is_wp_error($parent) ) {
+		wp_send_json_error( array( 'message' => 'Category not found' ), 404 );
+	}
+
+	$children = get_terms( array(
+		'taxonomy'   => 'product_cat',
+		'hide_empty' => true,
+		'parent'     => $cat_id,
+	) );
+
+	$groups = array();
+
+	foreach ( $children as $child ) {
+		$grandchildren = get_terms( array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'parent'     => $child->term_id,
+		) );
+
+		if ( ! empty( $grandchildren ) ) {
+			$items = array();
+			foreach ( $grandchildren as $gc ) {
+				$items[] = array(
+					'title' => $gc->name,
+					'link'  => get_term_link( $gc ),
+				);
+			}
+			$groups[] = array(
+				'title' => $child->name,
+				'items' => $items,
+			);
+		} else {
+			$groups[] = array(
+				'title' => '',
+				'items' => array(
+					array(
+						'title' => $child->name,
+						'link'  => get_term_link( $child ),
+					),
+				),
+			);
+		}
+	}
+
+	wp_send_json_success( array(
+		'title'  => $parent->name,
+		'groups' => $groups,
+	) );
+}
+add_action('wp_ajax_ocellaris_get_subcategories', 'ocellaris_get_subcategories');
+add_action('wp_ajax_nopriv_ocellaris_get_subcategories', 'ocellaris_get_subcategories');
+
+// Asegurar que el menú de categorías exista, esté asignado y poblado con categorías top-level
+function ocellaris_ensure_sidebar_menu() {
+	// Evitar sobrescribir si el usuario ya tiene el menú asignado y con items
+	$locations = get_theme_mod('nav_menu_locations', array());
+	$menu_id   = isset($locations['sidebar-menu']) ? (int) $locations['sidebar-menu'] : 0;
+
+	// Si no hay menú asignado a la ubicación, crear/usar "Ocellaris Categorías" y asignarlo
+	if ( ! $menu_id || ! wp_get_nav_menu_object( $menu_id ) ) {
+		$menu_obj = wp_get_nav_menu_object( 'Ocellaris Categorías' );
+		if ( ! $menu_obj ) {
+			$menu_id = wp_create_nav_menu( 'Ocellaris Categorías' );
+		} else {
+			$menu_id = (int) $menu_obj->term_id;
+		}
+		$locations['sidebar-menu'] = $menu_id;
+		set_theme_mod( 'nav_menu_locations', $locations );
+	}
+
+	// Poblar con categorías top-level si el menú está vacío
+	$items = wp_get_nav_menu_items( $menu_id );
+	if ( empty( $items ) ) {
+		$top_cats = get_terms( array(
+			'taxonomy'   => 'product_cat',
+			'hide_empty' => true,
+			'parent'     => 0,
+		) );
+
+		if ( ! is_wp_error( $top_cats ) ) {
+			foreach ( $top_cats as $cat ) {
+				wp_update_nav_menu_item( $menu_id, 0, array(
+					'menu-item-object'     => 'product_cat',
+					'menu-item-object-id'  => $cat->term_id,
+					'menu-item-type'       => 'taxonomy',
+					'menu-item-title'      => $cat->name,
+					'menu-item-url'        => get_term_link( $cat ),
+					'menu-item-status'     => 'publish',
+				) );
+			}
+		}
+	}
+}
+add_action( 'admin_init', 'ocellaris_ensure_sidebar_menu' );
