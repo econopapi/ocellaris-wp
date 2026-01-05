@@ -1,6 +1,8 @@
 <?php
 /**
  * Ocellaris Custom Astra Theme functions and definitions
+ * 
+ * Desarrollado por Daniel Limón - <dani@dlimon.net>
  *
  * @link https://developer.wordpress.org/themes/basics/theme-functions/
  *
@@ -717,55 +719,10 @@ add_action('wp_head', 'ocellaris_text_bar_frontend_styles');
  * FIN DE OCELLARIS CUSTOM TOP TEXT BAR
  */
 
-/** 
- * INTEGRACIÓN IPOS
- * Carga de módulos de integración con iPos.
- */
-
-// Verificar que WooCommerce esté activo
-if (in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
-    
-    // Cargar la clase Webhook Handler
-    require_once get_stylesheet_directory() . '/includes/class-webhook-handler.php';
-    
-    // Cargar el admin de iPos
-    if (is_admin()) {
-        require_once get_stylesheet_directory() . '/admin/ipos-integration-admin.php';
-    }
-    
-    // Hook para sincronización automática (opcional, comentado por default)
-    // add_action('ocellaris_daily_sync', 'ocellaris_auto_sync_ipos_categories');
-    
-    /**
-     * Función para sincronización automática vía cron
-     */
-    function ocellaris_auto_sync_ipos_categories() {
-        require_once get_stylesheet_directory() . '/includes/class-ipos-api.php';
-        require_once get_stylesheet_directory() . '/includes/class-category-sync.php';
-        
-        $sync = new Ocellaris_Category_Sync();
-        $result = $sync->sync_all_categories();
-        
-        // Log del resultado
-        if ($result['success']) {
-            error_log('iPos Sync: Categorías sincronizadas exitosamente. ' . $result['message']);
-        } else {
-            error_log('iPos Sync Error: ' . $result['message']);
-        }
-    }
-    
-    // Registrar cron job (opcional, descomentá si querés sincronización automática diaria)
-    /*
-    if (!wp_next_scheduled('ocellaris_daily_sync')) {
-        wp_schedule_event(time(), 'daily', 'ocellaris_daily_sync');
-    }
-    */
-}
 
 /**
- * FIN DE INTEGRACIÓN IPOS
+ * Eliminar imágenes asociadas al producto al borrar un producto
  */
-
 add_action('before_delete_post', 'ocellaris_delete_product_images', 10, 1);
 
 function ocellaris_delete_product_images($post_id) {
