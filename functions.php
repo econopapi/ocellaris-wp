@@ -870,3 +870,53 @@ function ocellaris_ensure_sidebar_menu() {
 	}
 }
 add_action( 'admin_init', 'ocellaris_ensure_sidebar_menu' );
+
+/**
+ * OCELLARIS CHECKOUT CUSTOMIZATIONS
+ * Personalizaciones del checkout de WooCommerce
+ */
+
+/**
+ * Cambiar "Detalles de facturación" por "Detalles de pedido"
+ */
+function ocellaris_change_billing_details_title( $translated_text, $text, $domain ) {
+	if ( $domain === 'woocommerce' ) {
+		switch ( $text ) {
+			case 'Billing details':
+			case 'Billing &amp; Shipping':
+				$translated_text = 'Detalles de pedido';
+				break;
+			case 'Detalles de facturación':
+				$translated_text = 'Detalles de pedido';
+				break;
+		}
+	}
+	return $translated_text;
+}
+add_filter( 'gettext', 'ocellaris_change_billing_details_title', 20, 3 );
+
+/**
+ * Deshabilitar la opción de "Enviar a una dirección diferente"
+ * Los datos de envío serán los mismos que los de pedido/facturación
+ */
+function ocellaris_disable_ship_to_different_address( $ship_to_different_address ) {
+	return false;
+}
+add_filter( 'woocommerce_ship_to_different_address_checked', 'ocellaris_disable_ship_to_different_address' );
+
+/**
+ * Ocultar completamente la sección de "Enviar a una dirección diferente"
+ */
+function ocellaris_hide_shipping_address_section() {
+	if ( is_checkout() ) {
+		?>
+		<style>
+			#ship-to-different-address,
+			.shipping_address {
+				display: none !important;
+			}
+		</style>
+		<?php
+	}
+}
+add_action( 'wp_head', 'ocellaris_hide_shipping_address_section' );
