@@ -920,3 +920,87 @@ function ocellaris_hide_shipping_address_section() {
 	}
 }
 add_action( 'wp_head', 'ocellaris_hide_shipping_address_section' );
+
+/**
+ * Ocultar opciones de envío en el carrito y mostrar mensaje personalizado
+ * Los costos de envío solo se calculan en el checkout
+ */
+function ocellaris_hide_shipping_in_cart() {
+	if ( is_cart() ) {
+		?>
+		<style>
+			/* Ocultar lista de métodos de envío en carrito */
+			.cart_totals .woocommerce-shipping-methods,
+			.cart_totals .woocommerce-shipping-calculator,
+			.cart_totals .woocommerce-shipping-destination {
+				display: none !important;
+			}
+			
+			/* Estilos para el mensaje personalizado */
+			.ocellaris-shipping-notice {
+				color: #666;
+				font-style: italic;
+				padding: 5px 0;
+			}
+		</style>
+		<?php
+	}
+}
+add_action( 'wp_head', 'ocellaris_hide_shipping_in_cart' );
+
+/**
+ * Reemplazar el contenido de envío en el carrito con mensaje personalizado
+ */
+function ocellaris_custom_cart_shipping_message( $shipping_label ) {
+	if ( is_cart() ) {
+		return '<span class="ocellaris-shipping-notice">Los costos de envío se calculan en el Checkout de pago.</span>';
+	}
+	return $shipping_label;
+}
+add_filter( 'woocommerce_cart_shipping_method_full_label', 'ocellaris_custom_cart_shipping_message', 10, 1 );
+
+/**
+ * Deshabilitar el calculador de envío en el carrito
+ */
+add_filter( 'woocommerce_shipping_show_shipping_calculator', '__return_false' );
+
+/**
+ * Mostrar mensaje personalizado en lugar de las opciones de envío en el carrito
+ */
+function ocellaris_replace_cart_shipping_content() {
+	if ( is_cart() ) {
+		?>
+		<script>
+		(function($) {
+			function replaceShippingContent() {
+				var $shippingTd = $('.cart_totals .woocommerce-shipping-totals td[data-title="Envío"], .cart_totals .woocommerce-shipping-totals td[data-title="Shipping"]');
+				if ($shippingTd.length) {
+					$shippingTd.html('<span class="ocellaris-shipping-notice">Los costos de envío se calculan en el Checkout de pago.</span>');
+				}
+			}
+			
+			$(document).ready(replaceShippingContent);
+			$(document.body).on('updated_cart_totals', replaceShippingContent);
+			$(document.body).on('updated_wc_div', replaceShippingContent);
+		})(jQuery);
+		</script>
+		<?php
+	}
+}
+add_action( 'wp_footer', 'ocellaris_replace_cart_shipping_content' );
+
+/**
+ * Cargar script para filtrar opciones de envío en checkout
+ */
+function ocellaris_checkout_shipping_filter_script() {
+	if ( is_checkout() ) {
+		wp_enqueue_script(
+			'ocellaris-checkout-shipping-filter',
+			get_stylesheet_directory_uri() . '/assets/js/checkout-shipping-filter.js',
+			array( 'jquery' ),
+			CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
