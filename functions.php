@@ -920,3 +920,54 @@ function ocellaris_hide_shipping_address_section() {
 	}
 }
 add_action( 'wp_head', 'ocellaris_hide_shipping_address_section' );
+
+/**
+ * Cambiar el texto del calculador de envío en el carrito
+ * "Introduce tu dirección para ver las opciones de envío" -> "Los costos de envío se calculan en el Checkout de pago"
+ */
+function ocellaris_change_shipping_calculator_text( $translated_text, $text, $domain ) {
+	if ( $domain === 'woocommerce' ) {
+		// Texto en inglés
+		if ( $text === 'Enter your address to view shipping options.' ) {
+			$translated_text = 'Los costos de envío se calculan en el Checkout de pago.';
+		}
+		// Texto ya traducido al español
+		if ( $text === 'Introduce tu dirección para ver las opciones de envío.' ) {
+			$translated_text = 'Los costos de envío se calculan en el Checkout de pago.';
+		}
+	}
+	return $translated_text;
+}
+add_filter( 'gettext', 'ocellaris_change_shipping_calculator_text', 20, 3 );
+
+/**
+ * Ocultar el enlace "Calcular envío" en el carrito
+ */
+function ocellaris_hide_shipping_calculator() {
+	if ( is_cart() ) {
+		?>
+		<style>
+			.woocommerce-shipping-calculator {
+				display: none !important;
+			}
+		</style>
+		<?php
+	}
+}
+add_action( 'wp_head', 'ocellaris_hide_shipping_calculator' );
+
+/**
+ * Cargar script para filtrar opciones de envío en checkout
+ */
+function ocellaris_checkout_shipping_filter_script() {
+	if ( is_checkout() ) {
+		wp_enqueue_script(
+			'ocellaris-checkout-shipping-filter',
+			get_stylesheet_directory_uri() . '/assets/js/checkout-shipping-filter.js',
+			array( 'jquery' ),
+			CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+			true
+		);
+	}
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
