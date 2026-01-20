@@ -14,7 +14,8 @@
         'DHL Economy Select Domestic ( 1-4 days )',
         'DHL Express Domestic ( Next day )',
         'FedEx Nacional Económico ( 2-4 days )',
-        'FedEx Nacional Día Siguiente ( Next day )'
+        'FedEx Nacional Día Siguiente ( Next day )',
+        'Recogida local'
     ];
 
     /**
