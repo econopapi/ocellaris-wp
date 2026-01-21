@@ -70,37 +70,82 @@
             <!-- columna 2: about us -->
             <div class="footer-column">
                 <h4>Acerca de Ocellaris</h4>
-                <ul>
-                    <li><a href="#">¿Quiénes somos?</a></li>
-                    <li><a href="#">Tienda física</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Programa de afiliados</a></li>
-                    <li><a href="/terminos-y-condiciones">Términos y condiciones</a></li>
-                </ul>
+                <?php
+                if (has_nav_menu('footer-about')) {
+                    wp_nav_menu(array(
+                        'theme_location' => 'footer-about',
+                        'container' => false,
+                        'menu_class' => '',
+                        'items_wrap' => '<ul>%3$s</ul>',
+                        'depth' => 1,
+                    ));
+                } else {
+                    // Fallback hardcodeado
+                    ?>
+                    <ul>
+                        <li><a href="<?php echo esc_url(home_url('/quienes-somos/')); ?>">¿Quiénes somos?</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/tienda-fisica/')); ?>">Tienda física</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/blog/')); ?>">Blog</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/programa-de-afiliados/')); ?>">Programa de afiliados</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/terminos-y-condiciones/')); ?>">Términos y condiciones</a></li>
+                    </ul>
+                    <?php
+                }
+                ?>
             </div>
 
             <!-- columna 3: atención al cliente -->
             <div class="footer-column">
                 <h4>Atención al cliente</h4>
-                <ul>
-                    <li><a href="#">Preguntas frecuentes</a></li>
-                    <li><a href="#">Política de envíos</a></li>
-                    <li><a href="#">Política de devoluciones</a></li>
-                    <li><a href="#">Guía de tallas</a></li>
-                    <li><a href="#">Contacto</a></li>
-                </ul>
+                <?php
+                if (has_nav_menu('footer-support')) {
+                    wp_nav_menu(array(
+                        'theme_location' => 'footer-support',
+                        'container' => false,
+                        'menu_class' => '',
+                        'items_wrap' => '<ul>%3$s</ul>',
+                        'depth' => 1,
+                    ));
+                } else {
+                    // Fallback hardcodeado
+                    ?>
+                    <ul>
+                        <li><a href="<?php echo esc_url(home_url('/preguntas-frecuentes/')); ?>">Preguntas frecuentes</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/politica-de-envios/')); ?>">Política de envíos</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/politica-de-devoluciones/')); ?>">Política de devoluciones</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/guia-de-tallas/')); ?>">Guía de tallas</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/contacto/')); ?>">Contacto</a></li>
+                    </ul>
+                    <?php
+                }
+                ?>
             </div>
 
             <!-- columna 4: recursos -->
             <div class="footer-column">
                 <h4>Recursos</h4>
-                <ul>
-                    <li><a href="#">Guías de acuarismo</a></li>
-                    <li><a href="#">Videos educativos</a></li>
-                    <li><a href="#">Eventos y talleres</a></li>
-                    <li><a href="#">Comunidad Ocellaris</a></li>
-                    <li><a href="#">Soporte técnico</a></li>
-                </ul>
+                <?php
+                if (has_nav_menu('footer-resources')) {
+                    wp_nav_menu(array(
+                        'theme_location' => 'footer-resources',
+                        'container' => false,
+                        'menu_class' => '',
+                        'items_wrap' => '<ul>%3$s</ul>',
+                        'depth' => 1,
+                    ));
+                } else {
+                    // Fallback hardcodeado
+                    ?>
+                    <ul>
+                        <li><a href="<?php echo esc_url(home_url('/guias-de-acuarismo/')); ?>">Guías de acuarismo</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/videos-educativos/')); ?>">Videos educativos</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/eventos-y-talleres/')); ?>">Eventos y talleres</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/comunidad-ocellaris/')); ?>">Comunidad Ocellaris</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/soporte-tecnico/')); ?>">Soporte técnico</a></li>
+                    </ul>
+                    <?php
+                }
+                ?>
             </div>
         </div>
     </div>

@@ -127,6 +127,9 @@ function ocellaris_register_menus() {
 		array(
 			'sidebar-menu' => __('Ocellaris Main Menu: Sidebar Menu (Categorías)', 'ocellaris-custom-astra'),
 			'quick-links-menu' => __('Ocellaris Main Menu: Quick Links Menu', 'ocellaris-custom-astra'),
+			'footer-about' => __('Ocellaris Footer: Acerca de Ocellaris', 'ocellaris-custom-astra'),
+			'footer-support' => __('Ocellaris Footer: Atención al Cliente', 'ocellaris-custom-astra'),
+			'footer-resources' => __('Ocellaris Footer: Recursos', 'ocellaris-custom-astra'),
 		)
 	);
 }
