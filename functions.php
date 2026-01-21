@@ -132,7 +132,7 @@ function ocellaris_register_menus() {
 			'footer-resources' => __('Ocellaris Footer: Recursos', 'ocellaris-custom-astra'),
 		)
 	);
-}
+} 
 add_action('init', 'ocellaris_register_menus');
 
 /**
