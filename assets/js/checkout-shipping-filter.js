@@ -22,6 +22,9 @@
         'Recogida local'
     ];
 
+    // Debug: activar para ver qué opciones se están procesando
+    const DEBUG_MODE = true;
+
     /**
      * Verifica si el checkout está en un estado válido para procesar
      * @returns {boolean}
@@ -67,12 +70,31 @@
      */
     function isShippingOptionAllowed(labelText) {
         // Normalizar el texto removiendo precios y espacios extra
-        const normalizedLabel = labelText.trim();
+        // Remover el precio (formato: $XXX.XX o $X,XXX.XX)
+        const normalizedLabel = labelText.replace(/:\s*\$[\d,]+\.\d{2}\s*$/, '').trim();
         
-        return allowedShippingOptions.some(function(allowedOption) {
-            // Hacer match con el inicio del texto (antes del precio)
-            return normalizedLabel.indexOf(allowedOption) !== -1;
+        if (DEBUG_MODE) {
+            console.log('🔍 Checking option:', {
+                original: labelText,
+                normalized: normalizedLabel,
+                allowed: false
+            });
+        }
+        
+        const isAllowed = allowedShippingOptions.some(function(allowedOption) {
+            // Hacer match exacto después de normalizar
+            const matches = normalizedLabel === allowedOption;
+            if (DEBUG_MODE && matches) {
+                console.log('✅ Match found:', normalizedLabel, '===', allowedOption);
+            }
+            return matches;
         });
+        
+        if (DEBUG_MODE) {
+            console.log(isAllowed ? '✅ ALLOWED:' : '❌ BLOCKED:', normalizedLabel);
+        }
+        
+        return isAllowed;
     }
 
     /**
@@ -101,12 +123,18 @@
             return;
         }
 
+        if (DEBUG_MODE) {
+            console.log('🚀 Starting shipping filter process...');
+            console.log('📦 Found', $shippingMethods.length, 'shipping methods');
+        }
+
         isProcessing = true;
         lastProcessedHash = currentHash;
 
         let firstVisibleOption = null;
         let hasCheckedVisible = false;
         let visibleOptions = 0;
+        let hiddenOptions = 0;
 
         $shippingMethods.each(function() {
             const $li = $(this);
@@ -135,6 +163,7 @@
                 }
             } else {
                 $li.hide();
+                hiddenOptions++;
                 
                 // Si la opción oculta estaba seleccionada, deseleccionarla
                 if ($input.is(':checked')) {
@@ -142,6 +171,14 @@
                 }
             }
         });
+
+        if (DEBUG_MODE) {
+            console.log('📊 Filter results:', {
+                visible: visibleOptions,
+                hidden: hiddenOptions,
+                hasCheckedVisible: hasCheckedVisible
+            });
+        }
 
         // Solo auto-seleccionar si hay opciones visibles y ninguna está seleccionada
         // Y solo si no es la carga inicial del checkout
