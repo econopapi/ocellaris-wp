@@ -996,14 +996,17 @@ add_action( 'wp_footer', 'ocellaris_replace_cart_shipping_content' );
  * Cargar script para filtrar opciones de envío en checkout
  */
 function ocellaris_checkout_shipping_filter_script() {
-	if ( is_checkout() ) {
+	// Forzar carga en todas las páginas para debug
+	error_log('🔥 LOADING CHECKOUT SCRIPT - is_checkout: ' . (is_checkout() ? 'YES' : 'NO') . ' - Page: ' . $_SERVER['REQUEST_URI']);
+	
+	//if ( is_checkout() ) {
 		wp_enqueue_script(
 			'ocellaris-checkout-shipping-filter',
 			get_stylesheet_directory_uri() . '/assets/js/checkout-shipping-filter.js',
 			array( 'jquery' ),
-			CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+			CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION . time(), // Agregar timestamp para evitar caché
 			true
 		);
-	}
+	//}
 }
 add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
