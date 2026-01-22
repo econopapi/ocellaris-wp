@@ -996,7 +996,12 @@ add_action( 'wp_footer', 'ocellaris_replace_cart_shipping_content' );
  * Cargar script para filtrar opciones de envío en checkout
  */
 function ocellaris_checkout_shipping_filter_script() {
-	if ( is_checkout() ) {
+	// Verificar múltiples condiciones para asegurar que estamos en checkout
+	$is_checkout_page = is_checkout() || 
+	                   (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/checkout') !== false) ||
+	                   (function_exists('wc_get_page_id') && is_page(wc_get_page_id('checkout')));
+	
+	if ( $is_checkout_page ) {
 		wp_enqueue_script(
 			'ocellaris-checkout-shipping-filter',
 			get_stylesheet_directory_uri() . '/assets/js/checkout-shipping-filter.js',
