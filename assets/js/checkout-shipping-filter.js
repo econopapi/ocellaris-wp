@@ -4,10 +4,15 @@
  * 
  * Desarrollado por Daniel Limón - <dani@dlimon.net>
  */
+
+console.log('🔥 SCRIPT LOADED!');
+
 (function($) {
     'use strict';
 
-    // Lista de opciones de envío permitidas (nombres parciales para hacer match)
+    console.log('🔥 IIFE STARTED!');
+
+    // Lista de opciones de envío permitidas
     const allowedShippingOptions = [
         'Estafeta Terrestre ( 1-2 days )',
         'Estafeta Express ( Next day )',
@@ -18,135 +23,61 @@
         'Recogida local'
     ];
 
-    /**
-     * Verifica si una opción de envío está permitida
-     * @param {string} labelText - Texto del label de la opción
-     * @returns {boolean}
-     */
     function isShippingOptionAllowed(labelText) {
-        // Normalizar el texto removiendo precios y espacios extra
-        const normalizedLabel = labelText.trim();
-        
-        return allowedShippingOptions.some(function(allowedOption) {
-            // Hacer match con el inicio del texto (antes del precio)
-            return normalizedLabel.indexOf(allowedOption) !== -1;
-        });
+        const normalizedLabel = labelText.replace(/:\s*\$[\d,]+\.\d{2}\s*$/, '').trim();
+        return allowedShippingOptions.includes(normalizedLabel);
     }
 
-    /**
-     * Filtra las opciones de envío
-     */
     function filterShippingOptions() {
+        console.log('🚀 FILTER FUNCTION CALLED!');
+        
         const $shippingMethods = $('#shipping_method li');
+        console.log('📦 Found', $shippingMethods.length, 'shipping methods');
         
         if ($shippingMethods.length === 0) {
+            console.log('❌ No shipping methods found');
             return;
         }
-
-        let firstVisibleOption = null;
-        let hasCheckedVisible = false;
 
         $shippingMethods.each(function() {
             const $li = $(this);
             const $label = $li.find('label');
-            const $input = $li.find('input.shipping_method');
             
-            if ($label.length === 0) {
-                return;
-            }
+            if ($label.length === 0) return;
 
-            // Obtener solo el texto del label (sin el HTML del precio)
-            const labelText = $label.text();
+            const labelText = $label.text().replace(/:\s*\$[\d,]+\.\d{2}\s*$/, '').trim();
+            console.log('🔍 Checking:', labelText);
 
             if (isShippingOptionAllowed(labelText)) {
+                console.log('✅ SHOWING:', labelText);
                 $li.show();
-                
-                // Guardar la primera opción visible
-                if (!firstVisibleOption) {
-                    firstVisibleOption = $input;
-                }
-                
-                // Verificar si esta opción visible está seleccionada
-                if ($input.is(':checked')) {
-                    hasCheckedVisible = true;
-                }
             } else {
+                console.log('❌ HIDING:', labelText);
                 $li.hide();
-                
-                // Si la opción oculta estaba seleccionada, deseleccionarla
-                if ($input.is(':checked')) {
-                    $input.prop('checked', false);
-                }
             }
         });
-
-        // Si ninguna opción visible está seleccionada, seleccionar la primera visible
-        if (!hasCheckedVisible && firstVisibleOption) {
-            firstVisibleOption.prop('checked', true).trigger('change');
-        }
     }
 
-    /**
-     * Inicializa el observer para detectar cambios en las opciones de envío
-     */
-    function initShippingObserver() {
-        // Observer para detectar cuando el contenedor de envío cambia
-        const targetNode = document.querySelector('.woocommerce-checkout');
-        
-        if (!targetNode) {
-            return;
-        }
-
-        const config = {
-            childList: true,
-            subtree: true,
-            attributes: false,
-            characterData: false
-        };
-
-        const callback = function(mutationsList) {
-            for (const mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    // Verificar si se agregaron nodos relacionados con envío
-                    const hasShippingChanges = Array.from(mutation.addedNodes).some(function(node) {
-                        if (node.nodeType === Node.ELEMENT_NODE) {
-                            return node.classList && 
-                                   (node.classList.contains('shipping_method') ||
-                                    node.id === 'shipping_method' ||
-                                    node.querySelector && node.querySelector('#shipping_method'));
-                        }
-                        return false;
-                    });
-
-                    if (hasShippingChanges || mutation.target.id === 'shipping_method' || 
-                        (mutation.target.closest && mutation.target.closest('#shipping_method'))) {
-                        // Pequeño delay para asegurar que el DOM esté completamente actualizado
-                        setTimeout(filterShippingOptions, 100);
-                    }
-                }
-            }
-        };
-
-        const observer = new MutationObserver(callback);
-        observer.observe(targetNode, config);
-
-        // También escuchar el evento de WooCommerce cuando se actualiza el checkout
-        $(document.body).on('updated_checkout', function() {
-            setTimeout(filterShippingOptions, 100);
-        });
-
-        // Filtrar opciones iniciales si ya existen
-        filterShippingOptions();
-    }
-
-    // Inicializar cuando el DOM esté listo
+    // EJECUTAR INMEDIATAMENTE CUANDO CARGUE
+    console.log('⏰ Setting up immediate execution...');
+    
     $(document).ready(function() {
-        initShippingObserver();
+        console.log('📄 DOM Ready!');
+        filterShippingOptions();
+        
+        // Ejecutar cada 2 segundos
+        setInterval(function() {
+            console.log('⏰ Interval check...');
+            filterShippingOptions();
+        }, 2000);
     });
 
-    // También inicializar cuando WooCommerce termine de cargar
-    $(document.body).on('init_checkout', function() {
-        initShippingObserver();
-    });
+    // Backup si jQuery no está listo
+    setTimeout(function() {
+        console.log('⏰ Timeout execution...');
+        filterShippingOptions();
+    }, 1000);
 
 })(jQuery);
+
+console.log('🔥 SCRIPT FINISHED!');
