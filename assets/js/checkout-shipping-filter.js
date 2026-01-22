@@ -158,45 +158,96 @@
      */
     function initShippingObserver() {
         // Ejecutar filtro inmediatamente
-        filterShippingOptions();
+        setTimeout(filterShippingOptions, 500);
         
         // Observer para detectar cuando el contenedor de envío cambia
         const targetNode = document.querySelector('.woocommerce-checkout');
         
         if (targetNode) {
             const observer = new MutationObserver(function(mutationsList) {
+                let shouldFilter = false;
+                
                 for (const mutation of mutationsList) {
-                    if (mutation.type === 'childList') {
-                        const hasShippingChanges = Array.from(mutation.addedNodes).some(function(node) {
-                            if (node.nodeType === Node.ELEMENT_NODE) {
-                                return node.classList && 
-                                       (node.classList.contains('shipping_method') ||
-                                        node.id === 'shipping_method' ||
-                                        node.querySelector && node.querySelector('#shipping_method'));
+                    // Detectar cualquier cambio en el DOM que pueda incluir opciones de envío
+                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
+                        // Verificar si el cambio está relacionado con envío
+                        const target = mutation.target;
+                        const targetParent = target.parentElement;
+                        
+                        if (target.id === 'shipping_method' ||
+                            (target.classList && target.classList.contains('shipping_method')) ||
+                            (target.querySelector && target.querySelector('#shipping_method')) ||
+                            (targetParent && targetParent.id === 'shipping_method') ||
+                            (target.closest && target.closest('#shipping_method')) ||
+                            (target.closest && target.closest('.woocommerce-shipping-fields'))) {
+                            shouldFilter = true;
+                            break;
+                        }
+                        
+                        // También detectar si se agregaron/removieron elementos li
+                        Array.from(mutation.addedNodes).forEach(function(node) {
+                            if (node.nodeType === Node.ELEMENT_NODE && 
+                                (node.tagName === 'LI' || node.querySelector && node.querySelector('li'))) {
+                                shouldFilter = true;
                             }
-                            return false;
                         });
-
-                        if (hasShippingChanges) {
-                            setTimeout(filterShippingOptions, 100);
+                    }
+                    
+                    // Detectar cambios de atributos que puedan indicar nuevas opciones
+                    if (mutation.type === 'attributes' && 
+                        (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                        if (mutation.target.closest && mutation.target.closest('#shipping_method')) {
+                            shouldFilter = true;
                         }
                     }
+                }
+
+                if (shouldFilter) {
+                    console.log('🔄 DOM change detected, filtering...');
+                    setTimeout(filterShippingOptions, 100);
                 }
             });
             
             observer.observe(targetNode, {
                 childList: true,
-                subtree: true
+                subtree: true,
+                attributes: true,
+                characterData: true
             });
         }
 
-        // Escuchar eventos de WooCommerce
-        $(document.body).on('updated_checkout updated_shipping_method', function() {
-            setTimeout(filterShippingOptions, 100);
+        // Escuchar TODOS los eventos de WooCommerce
+        $(document.body).on('updated_checkout updated_shipping_method checkout_error', function(e) {
+            console.log('🔄 WC Event:', e.type);
+            setTimeout(filterShippingOptions, 150);
         });
         
-        // Ejecutar periódicamente para asegurar que funcione
-        setInterval(filterShippingOptions, 2000);
+        // Escuchar cambios en campos de dirección
+        $(document).on('change', '#billing_country, #billing_state, #billing_city, #billing_postcode, #shipping_country, #shipping_state, #shipping_city, #shipping_postcode', function() {
+            console.log('🔄 Address changed');
+            // Delay más largo porque WooCommerce necesita tiempo para cargar opciones
+            setTimeout(filterShippingOptions, 1000);
+        });
+        
+        // Monitor más agresivo para detectar cuando aparecen opciones de envío
+        const aggressiveMonitor = setInterval(function() {
+            const $currentMethods = $('#shipping_method li');
+            if ($currentMethods.length > 0) {
+                // Solo ejecutar si encontramos opciones que no están filtradas correctamente
+                const hasUnfilteredOptions = $currentMethods.filter(':visible').filter(function() {
+                    const labelText = $(this).find('label').text().replace(/:\s*\$[\d,]+\.\d{2}\s*$/, '').trim();
+                    return !isShippingOptionAllowed(labelText);
+                }).length > 0;
+                
+                if (hasUnfilteredOptions) {
+                    console.log('🔄 Unfiltered options detected, filtering...');
+                    filterShippingOptions();
+                }
+            }
+        }, 1000);
+        
+        // Limpiar monitor después de 2 minutos
+        setTimeout(() => clearInterval(aggressiveMonitor), 120000);
     }
 
     // Inicializar cuando el DOM esté listo
