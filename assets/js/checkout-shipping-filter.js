@@ -23,7 +23,7 @@
     ];
 
     // Debug: activar para ver qué opciones se están procesando
-    const DEBUG_MODE = false;
+    const DEBUG_MODE = true;
 
     /**
      * Verifica si el checkout está en un estado válido para procesar
@@ -157,97 +157,29 @@
      * Inicializa el observer para detectar cambios en las opciones de envío
      */
     function initShippingObserver() {
-        // Ejecutar filtro inmediatamente
-        setTimeout(filterShippingOptions, 500);
+        console.log('🚀 Initializing shipping observer...');
         
-        // Observer para detectar cuando el contenedor de envío cambia
-        const targetNode = document.querySelector('.woocommerce-checkout');
+        // Filtrar opciones iniciales
+        setTimeout(filterShippingOptions, 1000);
         
-        if (targetNode) {
-            const observer = new MutationObserver(function(mutationsList) {
-                let shouldFilter = false;
-                
-                for (const mutation of mutationsList) {
-                    // Detectar cualquier cambio en el DOM que pueda incluir opciones de envío
-                    if (mutation.type === 'childList' || mutation.type === 'characterData') {
-                        // Verificar si el cambio está relacionado con envío
-                        const target = mutation.target;
-                        const targetParent = target.parentElement;
-                        
-                        if (target.id === 'shipping_method' ||
-                            (target.classList && target.classList.contains('shipping_method')) ||
-                            (target.querySelector && target.querySelector('#shipping_method')) ||
-                            (targetParent && targetParent.id === 'shipping_method') ||
-                            (target.closest && target.closest('#shipping_method')) ||
-                            (target.closest && target.closest('.woocommerce-shipping-fields'))) {
-                            shouldFilter = true;
-                            break;
-                        }
-                        
-                        // También detectar si se agregaron/removieron elementos li
-                        Array.from(mutation.addedNodes).forEach(function(node) {
-                            if (node.nodeType === Node.ELEMENT_NODE && 
-                                (node.tagName === 'LI' || node.querySelector && node.querySelector('li'))) {
-                                shouldFilter = true;
-                            }
-                        });
-                    }
-                    
-                    // Detectar cambios de atributos que puedan indicar nuevas opciones
-                    if (mutation.type === 'attributes' && 
-                        (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
-                        if (mutation.target.closest && mutation.target.closest('#shipping_method')) {
-                            shouldFilter = true;
-                        }
-                    }
-                }
-
-                if (shouldFilter) {
-                    console.log('🔄 DOM change detected, filtering...');
-                    setTimeout(filterShippingOptions, 100);
-                }
-            });
-            
-            observer.observe(targetNode, {
-                childList: true,
-                subtree: true,
-                attributes: true,
-                characterData: true
-            });
-        }
-
-        // Escuchar TODOS los eventos de WooCommerce
-        $(document.body).on('updated_checkout updated_shipping_method checkout_error', function(e) {
-            console.log('🔄 WC Event:', e.type);
-            setTimeout(filterShippingOptions, 150);
+        // ENFOQUE SIMPLE: Solo usar el evento más confiable de WooCommerce
+        $(document.body).on('updated_checkout', function() {
+            console.log('📦 WooCommerce updated_checkout event fired!');
+            // Delay generoso para asegurar que las opciones estén cargadas
+            setTimeout(function() {
+                console.log('⏰ Running filter after updated_checkout...');
+                filterShippingOptions();
+            }, 2000);
         });
         
-        // Escuchar cambios en campos de dirección
-        $(document).on('change', '#billing_country, #billing_state, #billing_city, #billing_postcode, #shipping_country, #shipping_state, #shipping_city, #shipping_postcode', function() {
-            console.log('🔄 Address changed');
-            // Delay más largo porque WooCommerce necesita tiempo para cargar opciones
-            setTimeout(filterShippingOptions, 1000);
-        });
-        
-        // Monitor más agresivo para detectar cuando aparecen opciones de envío
-        const aggressiveMonitor = setInterval(function() {
-            const $currentMethods = $('#shipping_method li');
-            if ($currentMethods.length > 0) {
-                // Solo ejecutar si encontramos opciones que no están filtradas correctamente
-                const hasUnfilteredOptions = $currentMethods.filter(':visible').filter(function() {
-                    const labelText = $(this).find('label').text().replace(/:\s*\$[\d,]+\.\d{2}\s*$/, '').trim();
-                    return !isShippingOptionAllowed(labelText);
-                }).length > 0;
-                
-                if (hasUnfilteredOptions) {
-                    console.log('🔄 Unfiltered options detected, filtering...');
-                    filterShippingOptions();
-                }
+        // Backup: Monitorear cada 3 segundos si hay opciones sin filtrar
+        setInterval(function() {
+            const $methods = $('#shipping_method li');
+            if ($methods.length > 0) {
+                console.log('🔍 Checking for unfiltered options...');
+                filterShippingOptions();
             }
-        }, 1000);
-        
-        // Limpiar monitor después de 2 minutos
-        setTimeout(() => clearInterval(aggressiveMonitor), 120000);
+        }, 3000);
     }
 
     // Inicializar cuando el DOM esté listo
