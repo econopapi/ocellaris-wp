@@ -1215,6 +1215,15 @@ add_filter( 'astra_page_title', function( $title ) {
 }, 10, 1 );
 
 /**
+ * Remover el enlace "Descargas" del menú de Mi cuenta
+ */
+function ocellaris_remove_downloads_from_account_menu( $items ) {
+	unset( $items['downloads'] );
+	return $items;
+}
+add_filter( 'woocommerce_account_menu_items', 'ocellaris_remove_downloads_from_account_menu' );
+
+/**
  * Deshabilitar la opción de "Enviar a una dirección diferente"
  * Los datos de envío serán los mismos que los de pedido/facturación
  */
