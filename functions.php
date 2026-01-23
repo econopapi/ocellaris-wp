@@ -476,6 +476,10 @@ function ocellaris_render_featured_products_block($attributes) {
 		return '<div class="ocellaris-featured-products"><p>No se encontraron productos.</p></div>';
 	}
 
+	// Usar el número de productos que realmente se van a mostrar
+	$displayed_count = min($products_to_show, $products->found_posts);
+	$grid_class = 'products-count-' . $displayed_count;
+
 	ob_start();
 	?>
 
@@ -484,7 +488,8 @@ function ocellaris_render_featured_products_block($attributes) {
 			<h2 class="ocellaris-featured-products-title"><?php echo esc_html($title); ?></h2>
 		<?php endif; ?>
 		
-		<div class="featured-products-grid">
+		<!-- DEBUG: Mostrando <?php echo $displayed_count; ?> productos con clase <?php echo $grid_class; ?> -->
+		<div class="featured-products-grid <?php echo esc_attr($grid_class); ?>">
 			<?php while ($products->have_posts()): $products->the_post(); 
 				global $product;
 				if (!$product || !$product->is_visible()) continue;
