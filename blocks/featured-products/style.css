@@ -20,21 +20,51 @@
 
 .featured-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
+  gap: 20px;
   margin-bottom: 40px;
+  justify-content: center;
+  grid-template-columns: repeat(4, 1fr); /* Default 4 columns */
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-@media (min-width: 768px) {
-  .featured-products-grid {
-    grid-template-columns: repeat(2, 1fr);
+/* Override para diferentes cantidades */
+.featured-products-grid.products-count-1 {
+  grid-template-columns: 1fr !important;
+  max-width: 300px !important;
+}
+
+.featured-products-grid.products-count-2 {
+  grid-template-columns: repeat(2, 1fr) !important;
+  max-width: 640px !important;
+}
+
+.featured-products-grid.products-count-3 {
+  grid-template-columns: repeat(3, 1fr) !important;
+  max-width: 960px !important;
+}
+
+.featured-products-grid.products-count-4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+  max-width: 1200px !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .featured-products-grid,
+  .featured-products-grid.products-count-1,
+  .featured-products-grid.products-count-2,
+  .featured-products-grid.products-count-3,
+  .featured-products-grid.products-count-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px !important;
+    max-width: 100% !important;
   }
-}
-
-@media (min-width: 1024px) {
-  .featured-products-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
+  
+  .featured-products-grid.products-count-1 {
+    grid-template-columns: 1fr !important;
+    max-width: 300px !important;
   }
 }
 
@@ -216,6 +246,11 @@
 
 .featured-product-price {
   margin-bottom: 20px;
+  min-height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .featured-product-price .price,
@@ -224,6 +259,9 @@
   color: #FF6B35 !important;
   font-size: 20px !important;
   font-weight: bold !important;
+  line-height: 1.3 !important;
+  display: block !important;
+  text-align: center !important;
 }
 
 .featured-product-price .price del,
@@ -231,8 +269,11 @@
 .featured-product-price del .amount {
   color: #999 !important;
   font-size: 14px !important;
-  margin-right: 8px !important;
+  margin-right: 0 !important;
+  margin-bottom: 4px !important;
   font-weight: normal !important;
+  display: block !important;
+  text-align: center !important;
 }
 
 .featured-product-price .price ins,
@@ -241,6 +282,8 @@
   text-decoration: none !important;
   font-weight: bold !important;
   color: #FF6B35 !important;
+  display: block !important;
+  text-align: center !important;
 }
 
 .featured-add-to-cart {
