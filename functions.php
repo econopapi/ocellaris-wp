@@ -1151,9 +1151,9 @@ add_action( 'admin_init', 'ocellaris_ensure_sidebar_menu' );
  */
 
 /**
- * Cambiar "Detalles de facturación" por "Detalles de pedido"
+ * Cambiar textos de WooCommerce al español
  */
-function ocellaris_change_billing_details_title( $translated_text, $text, $domain ) {
+function ocellaris_translate_woocommerce_texts( $translated_text, $text, $domain ) {
 	if ( $domain === 'woocommerce' ) {
 		switch ( $text ) {
 			case 'Billing details':
@@ -1163,11 +1163,56 @@ function ocellaris_change_billing_details_title( $translated_text, $text, $domai
 			case 'Detalles de facturación':
 				$translated_text = 'Detalles de pedido';
 				break;
+			case 'My account':
+				$translated_text = 'Mi cuenta';
+				break;
 		}
 	}
 	return $translated_text;
 }
-add_filter( 'gettext', 'ocellaris_change_billing_details_title', 20, 3 );
+add_filter( 'gettext', 'ocellaris_translate_woocommerce_texts', 20, 3 );
+
+/**
+ * Función específica para el título de página My Account
+ */
+function ocellaris_change_my_account_title( $title, $post_id = null ) {
+	if ( function_exists( 'is_wc_endpoint_url' ) && function_exists( 'is_account_page' ) ) {
+		if ( is_account_page() && in_the_loop() && is_main_query() ) {
+			$title = str_replace( 'My account', 'Mi cuenta', $title );
+		}
+	}
+	return $title;
+}
+add_filter( 'the_title', 'ocellaris_change_my_account_title', 10, 2 );
+add_filter( 'woocommerce_page_title', 'ocellaris_change_my_account_title', 10, 1 );
+
+/**
+ * Cambiar el título de la página My Account en el head
+ */
+function ocellaris_change_account_page_title( $title ) {
+	if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+		$title = str_replace( 'My account', 'Mi cuenta', $title );
+	}
+	return $title;
+}
+add_filter( 'wp_title', 'ocellaris_change_account_page_title', 10, 1 );
+add_filter( 'document_title_parts', function( $title_parts ) {
+	if ( function_exists( 'is_account_page' ) && is_account_page() && isset( $title_parts['title'] ) ) {
+		$title_parts['title'] = str_replace( 'My account', 'Mi cuenta', $title_parts['title'] );
+	}
+	return $title_parts;
+}, 10, 1 );
+
+/**
+ * Filtro específico para el tema Astra
+ */
+add_filter( 'astra_the_title_enabled', '__return_true' );
+add_filter( 'astra_page_title', function( $title ) {
+	if ( function_exists( 'is_account_page' ) && is_account_page() ) {
+		$title = str_replace( 'My account', 'Mi cuenta', $title );
+	}
+	return $title;
+}, 10, 1 );
 
 /**
  * Deshabilitar la opción de "Enviar a una dirección diferente"
