@@ -52,3 +52,10 @@
 .editor-preview > div > div:hover {
   transform: translateY(-3px);
 }
+
+/* Grid mode preview styles */
+.editor-preview .grid-preview {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
+  gap: 15px !important;
+}

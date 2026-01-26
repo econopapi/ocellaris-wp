@@ -1,0 +1,44 @@
+/* Ocellaris All Brands Block - Editor Styles */
+
+.ocellaris-all-brands-editor {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background: #f9f9f9;
+}
+
+.ocellaris-all-brands-editor .editor-preview {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.ocellaris-all-brands-editor .editor-preview h3 {
+  margin: 0 0 20px 0;
+  font-family: inherit;
+}
+
+.ocellaris-all-brands-editor .filter-preview {
+  margin-bottom: 20px;
+}
+
+.ocellaris-all-brands-editor .preview-note {
+  background: #e8f4fd;
+  color: #0073aa;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 15px;
+  border-left: 4px solid #0073aa;
+}
+
+/* Estilos específicos para los controles del inspector */
+.components-panel__body .components-base-control__label {
+  font-weight: 600;
+  color: #1e1e1e;
+}
+
+.components-toggle-control .components-form-toggle {
+  margin-right: 12px;
+}

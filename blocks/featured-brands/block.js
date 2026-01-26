@@ -6,6 +6,7 @@
   var RangeControl = components.RangeControl;
   var PanelBody = components.PanelBody;
   var CheckboxControl = components.CheckboxControl;
+  var SelectControl = components.SelectControl;
   var useState = element.useState;
   var useEffect = element.useEffect;
   var useSelect = data.useSelect;
@@ -23,6 +24,10 @@
       title: {
         type: 'string',
         default: 'FEATURED BRANDS'
+      },
+      displayMode: {
+        type: 'string',
+        default: 'carousel'
       },
       autoplaySpeed: {
         type: 'number',
@@ -213,7 +218,19 @@
                     },
                     key: 'title'
                   }),
-                  el(RangeControl, {
+                  el(SelectControl, {
+                    label: 'Display Mode',
+                    value: attributes.displayMode,
+                    options: [
+                      { label: 'Carousel', value: 'carousel' },
+                      { label: 'Grid', value: 'grid' }
+                    ],
+                    onChange: function (value) {
+                      setAttributes({ displayMode: value });
+                    },
+                    key: 'displayMode'
+                  }),
+                  attributes.displayMode === 'carousel' ? el(RangeControl, {
                     label: 'Autoplay Speed (ms)',
                     value: attributes.autoplaySpeed,
                     onChange: function (value) {
@@ -223,7 +240,7 @@
                     max: 10000,
                     step: 500,
                     key: 'autoplaySpeed'
-                  })
+                  }) : null
                 ]
               ),
               el(
@@ -288,7 +305,14 @@
               el(
                 'div',
                 { 
-                  style: { 
+                  style: attributes.displayMode === 'grid' ? {
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                    gap: '20px',
+                    padding: '20px',
+                    background: '#f9f9f9',
+                    borderRadius: '8px'
+                  } : { 
                     display: 'flex', 
                     gap: '30px', 
                     justifyContent: 'center', 
@@ -339,7 +363,7 @@
                   fontSize: '12px',
                   marginTop: '15px' 
                 } 
-              }, '↔ Carousel with autoplay (Preview on frontend)')
+              }, attributes.displayMode === 'carousel' ? '↔ Carousel with autoplay (Preview on frontend)' : '⊞ Grid layout (Preview on frontend)')
             ]
           )
         ]

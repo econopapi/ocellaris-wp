@@ -323,6 +323,88 @@ add_action('init', 'ocellaris_register_featured_brands_block');
 
 
 /**
+ * OCELLARIS CUSTOM ALL BRANDS BLOCK
+ * Implementación de bloque personalizado para mostrar todas las marcas
+ * con filtro alfabético y diseño responsive.
+ */
+
+/**
+ * Register Ocellaris All Brands Block
+ */
+function ocellaris_register_all_brands_block() {
+	// register block script
+	wp_register_script(
+		'ocellaris-all-brands-block',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/block.js',
+		array('wp-blocks', 'wp-element', 'wp-components'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	// register block styles
+	wp_register_style(
+		'ocellaris-all-brands-block-editor',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/editor.css',
+		array('wp-edit-blocks'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	wp_register_style(
+		'ocellaris-all-brands-block',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/style.css',
+		array(),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	// register frontend script for filtering
+	wp_register_script(
+		'ocellaris-all-brands-frontend',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/frontend.js',
+		array('jquery'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+
+	// register the block
+	register_block_type(
+		'ocellaris/all-brands',
+		array(
+			'editor_script' => 'ocellaris-all-brands-block',
+			'editor_style' => 'ocellaris-all-brands-block-editor',
+			'style' => 'ocellaris-all-brands-block',
+			'render_callback' => 'ocellaris_render_all_brands_block',
+			'attributes' => array(
+				'title' => array(
+					'type' => 'string',
+					'default' => 'TODAS NUESTRAS MARCAS',
+				),
+				'showAlphabetFilter' => array(
+					'type' => 'boolean',
+					'default' => true,
+				),
+				'columns' => array(
+					'type' => 'number',
+					'default' => 4,
+				),
+				'displayStyle' => array(
+					'type' => 'string',
+					'default' => 'grid',
+				),
+				'showBrandCount' => array(
+					'type' => 'boolean',
+					'default' => true,
+				),
+				'brandImageSize' => array(
+					'type' => 'string',
+					'default' => 'medium',
+				),
+			),
+		)
+	);
+}
+add_action('init', 'ocellaris_register_all_brands_block');
+
+
+/**
  * OCELLARIS CUSTOM FEATURED PRODUCTS BLOCK
  * Implementación de bloque personalizado para mostrar productos destacados
  * con diferentes filtros: manual, por etiquetas, ofertas, etc.
@@ -392,6 +474,10 @@ function ocellaris_register_featured_products_block() {
 					'type' => 'boolean',
 					'default' => false,
 				),
+				'randomizeProducts' => array(
+					'type' => 'boolean',
+					'default' => false,
+				),
 			),
 		)
 	);
@@ -410,13 +496,20 @@ function ocellaris_render_featured_products_block($attributes) {
 	$selected_tags = isset($attributes['selectedTags']) ? $attributes['selectedTags'] : array();
 	$show_on_sale = isset($attributes['showOnSale']) ? $attributes['showOnSale'] : false;
 	$show_featured = isset($attributes['showFeatured']) ? $attributes['showFeatured'] : false;
+	$randomize_products = isset($attributes['randomizeProducts']) ? $attributes['randomizeProducts'] : false;
 
 	// Preparar argumentos para WP_Query
 	$args = array(
 		'post_type' => 'product',
 		'posts_per_page' => $products_to_show,
 		'post_status' => 'publish',
-		'meta_query' => array(),
+		'meta_query' => array(
+			array(
+				'key' => '_stock_status',
+				'value' => 'instock',
+				'compare' => '='
+			)
+		),
 		'tax_query' => array(),
 	);
 
@@ -424,8 +517,17 @@ function ocellaris_render_featured_products_block($attributes) {
 	switch ($filter_type) {
 		case 'manual':
 			if (!empty($selected_products)) {
-				$args['post__in'] = $selected_products;
-				$args['orderby'] = 'post__in';
+				if ($randomize_products) {
+					// Si queremos orden aleatorio, no usar post__in con orderby
+					$args['post__in'] = $selected_products;
+					$args['orderby'] = 'rand';
+				} else {
+					// Orden normal según selección
+					$args['post__in'] = $selected_products;
+					$args['orderby'] = 'post__in';
+				}
+				// Aumentar el límite para compensar productos fuera de stock
+				$args['posts_per_page'] = count($selected_products) * 2; // multiplicar por 2 para asegurar suficientes productos
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay productos seleccionados.</p></div>';
 			}
@@ -447,6 +549,9 @@ function ocellaris_render_featured_products_block($attributes) {
 					'type' => 'NUMERIC'
 				)
 			);
+			if ($randomize_products) {
+				$args['orderby'] = 'rand';
+			}
 			break;
 
 		case 'featured':
@@ -455,6 +560,9 @@ function ocellaris_render_featured_products_block($attributes) {
 				'field' => 'name',
 				'terms' => 'featured',
 			);
+			if ($randomize_products) {
+				$args['orderby'] = 'rand';
+			}
 			break;
 
 		case 'tags':
@@ -464,6 +572,9 @@ function ocellaris_render_featured_products_block($attributes) {
 					'field' => 'term_id',
 					'terms' => $selected_tags,
 				);
+				if ($randomize_products) {
+					$args['orderby'] = 'rand';
+				}
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay etiquetas seleccionadas.</p></div>';
 			}
@@ -476,8 +587,13 @@ function ocellaris_render_featured_products_block($attributes) {
 		return '<div class="ocellaris-featured-products"><p>No se encontraron productos.</p></div>';
 	}
 
-	// Usar el número de productos que realmente se van a mostrar
-	$displayed_count = min($products_to_show, $products->found_posts);
+	// Para selección manual, determinar cuántos productos en stock tenemos disponibles
+	if ($filter_type === 'manual') {
+		$displayed_count = min(count($selected_products), $products->found_posts);
+	} else {
+		$displayed_count = min($products_to_show, $products->found_posts);
+	}
+	
 	$grid_class = 'products-count-' . $displayed_count;
 
 	ob_start();
@@ -488,11 +604,24 @@ function ocellaris_render_featured_products_block($attributes) {
 			<h2 class="ocellaris-featured-products-title"><?php echo esc_html($title); ?></h2>
 		<?php endif; ?>
 		
-		<!-- DEBUG: Mostrando <?php echo $displayed_count; ?> productos con clase <?php echo $grid_class; ?> -->
 		<div class="featured-products-grid <?php echo esc_attr($grid_class); ?>">
-			<?php while ($products->have_posts()): $products->the_post(); 
+			<?php 
+			$products_displayed = 0;
+			$max_products = ($filter_type === 'manual') ? count($selected_products) : $products_to_show;
+			
+			while ($products->have_posts() && $products_displayed < $max_products): 
+				$products->the_post(); 
 				global $product;
-				if (!$product || !$product->is_visible()) continue;
+				
+				// Skip if product is not valid or not visible
+				if (!$product || !$product->is_visible()) {
+					continue;
+				}
+				
+				// Verificar stock adicional por si acaso
+				if (!$product->is_in_stock()) {
+					continue;
+				}
 				
 				$product_id = get_the_ID();
 				$is_on_sale = $product->is_on_sale();
@@ -509,6 +638,8 @@ function ocellaris_render_featured_products_block($attributes) {
 						$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
 					}
 				}
+				
+				$products_displayed++;
 			?>
 			<div class="featured-product-item <?php echo $is_on_sale ? 'on-sale' : ''; ?> <?php echo $is_featured ? 'featured' : ''; ?>">
 				
@@ -599,58 +730,212 @@ function ocellaris_render_featured_products_block($attributes) {
 function ocellaris_render_featured_brands_block($attributes) {
 	$selected_brands = isset($attributes['selectedBrands']) ? $attributes['selectedBrands']:array();
 	$title = isset($attributes['title'])? $attributes['title']: 'Marcas Destacadas';
+	$display_mode = isset($attributes['displayMode'])? $attributes['displayMode']: 'carousel';
 	$autoplay_speed = isset($attributes['autoplaySpeed'])? $attributes['autoplaySpeed']: 3000;
 
 	if(empty($selected_brands)) {
 		return '';
 	}
 
-	// enqueue carousel script
-	wp_enqueue_script('ocellaris-brands-carousel');
+	// enqueue carousel script only for carousel mode
+	if($display_mode === 'carousel') {
+		wp_enqueue_script('ocellaris-brands-carousel');
+	}
 
 	ob_start();
 	?>
 
-	<div class="ocellaris-featured-brands" data-autoplay-speed="<?php echo esc_attr($autoplay_speed); ?>">
+	<div class="ocellaris-featured-brands <?php echo esc_attr('mode-' . $display_mode); ?>" <?php if($display_mode === 'carousel'): ?>data-autoplay-speed="<?php echo esc_attr($autoplay_speed); ?>"<?php endif; ?>>
 		<?php if (!empty($title)): ?>
 			<h2 class="brands-title"><?php echo esc_html($title); ?></h2>
 		<?php endif; ?>
-		<div class="brands-carousel-wrapper">
-			<button class="carousel-nav carousel-prev" aria-label="Anterior">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-					<path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>		
-			</button>
-			<div class="brands-carousel-container">
-				<div class="brands-carousel">
-					<?php foreach ($selected_brands as $brand_id):
-						$brand = get_term($brand_id, 'product_brand');
-						if(!$brand || is_wp_error($brand)) {
-							continue;
-						}
-						$thumbnail_id = get_term_meta($brand_id, 'thumbnail_id', true);
-						$image_url = $thumbnail_id? wp_get_attachment_url($thumbnail_id) : '';
-						$brand_link = get_term_link($brand);
-					?>
-					<div class="brand-item">
-						<a href="<?php echo esc_url($brand_link); ?>" class="brand-link">
-							<?php if($image_url): ?>
-								<img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($brand->name); ?>" class="brand-logo">
-							<?php else: ?>
-								<span class="brand-name-text"><?php echo esc_html($brand->name); ?></span>
-							<?php endif; ?>
-						</a>
+		
+		<?php if($display_mode === 'carousel'): ?>
+			<div class="brands-carousel-wrapper">
+				<button class="carousel-nav carousel-prev" aria-label="Anterior">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+						<path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>		
+				</button>
+				<div class="brands-carousel-container">
+					<div class="brands-carousel">
+						<?php foreach ($selected_brands as $brand_id):
+							$brand = get_term($brand_id, 'product_brand');
+							if(!$brand || is_wp_error($brand)) {
+								continue;
+							}
+							$thumbnail_id = get_term_meta($brand_id, 'thumbnail_id', true);
+							$image_url = $thumbnail_id? wp_get_attachment_url($thumbnail_id) : '';
+							$brand_link = get_term_link($brand);
+						?>
+						<div class="brand-item">
+							<a href="<?php echo esc_url($brand_link); ?>" class="brand-link">
+								<?php if($image_url): ?>
+									<img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($brand->name); ?>" class="brand-logo">
+								<?php else: ?>
+									<span class="brand-name-text"><?php echo esc_html($brand->name); ?></span>
+								<?php endif; ?>
+							</a>
+						</div>
+						<?php endforeach; ?>
 					</div>
-					<?php endforeach; ?>
 				</div>
+				<button class="carousel-nav carousel-next" aria-label="Siguiente">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+						<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+					</svg>				
+				</button>
 			</div>
-			<button class="carousel-nav carousel-next" aria-label="Siguiente">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-					<path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-				</svg>				
-			</button>
+		<?php else: ?>
+			<div class="brands-grid">
+				<?php foreach ($selected_brands as $brand_id):
+					$brand = get_term($brand_id, 'product_brand');
+					if(!$brand || is_wp_error($brand)) {
+						continue;
+					}
+					$thumbnail_id = get_term_meta($brand_id, 'thumbnail_id', true);
+					$image_url = $thumbnail_id? wp_get_attachment_url($thumbnail_id) : '';
+					$brand_link = get_term_link($brand);
+				?>
+				<div class="brand-item">
+					<a href="<?php echo esc_url($brand_link); ?>" class="brand-link">
+						<?php if($image_url): ?>
+							<img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($brand->name); ?>" class="brand-logo">
+						<?php else: ?>
+							<span class="brand-name-text"><?php echo esc_html($brand->name); ?></span>
+						<?php endif; ?>
+					</a>
+				</div>
+				<?php endforeach; ?>
+			</div>
+		<?php endif; ?>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+
+/**
+ * Render Ocellaris All Brands Block
+ */
+function ocellaris_render_all_brands_block($attributes) {
+	$title = isset($attributes['title']) ? $attributes['title'] : 'TODAS NUESTRAS MARCAS';
+	$show_alphabet_filter = isset($attributes['showAlphabetFilter']) ? $attributes['showAlphabetFilter'] : true;
+	$columns = isset($attributes['columns']) ? $attributes['columns'] : 4;
+	$display_style = isset($attributes['displayStyle']) ? $attributes['displayStyle'] : 'grid';
+	$show_brand_count = isset($attributes['showBrandCount']) ? $attributes['showBrandCount'] : true;
+	$brand_image_size = isset($attributes['brandImageSize']) ? $attributes['brandImageSize'] : 'medium';
+
+	// enqueue frontend script
+	wp_enqueue_script('ocellaris-all-brands-frontend');
+
+	// Get all brands from WooCommerce
+	$brands = get_terms(array(
+		'taxonomy' => 'product_brand',
+		'orderby' => 'name',
+		'order' => 'ASC',
+		'hide_empty' => true,
+	));
+
+	if(empty($brands) || is_wp_error($brands)) {
+		return '<div class="ocellaris-all-brands">
+					<div class="brands-empty">
+						<div class="brands-empty-icon">🏷️</div>
+						<p>No se encontraron marcas disponibles.</p>
+					</div>
+				</div>';
+	}
+
+	// Organize brands by alphabet
+	$brands_by_letter = array();
+	$alphabet = range('A', 'Z');
+	$other_letters = array();
+
+	foreach($brands as $brand) {
+		$first_letter = strtoupper(substr($brand->name, 0, 1));
+		if(in_array($first_letter, $alphabet)) {
+			$brands_by_letter[$first_letter][] = $brand;
+		} else {
+			$other_letters[] = $brand;
+		}
+	}
+
+	// Add numbers/symbols to the end
+	if(!empty($other_letters)) {
+		$brands_by_letter['#'] = $other_letters;
+	}
+
+	ob_start();
+	?>
+	<div class="ocellaris-all-brands" data-columns="<?php echo esc_attr($columns); ?>" data-style="<?php echo esc_attr($display_style); ?>">
+		<?php if (!empty($title)): ?>
+			<h2 class="all-brands-title"><?php echo esc_html($title); ?></h2>
+		<?php endif; ?>
+
+		<?php if ($show_alphabet_filter): ?>
+			<div class="alphabet-filter">
+				<button class="filter-button active" data-filter="all">TODAS</button>
+				<?php foreach ($alphabet as $letter): ?>
+					<?php if (isset($brands_by_letter[$letter])): ?>
+						<button class="filter-button" data-filter="<?php echo esc_attr($letter); ?>"><?php echo esc_html($letter); ?></button>
+					<?php endif; ?>
+				<?php endforeach; ?>
+				<?php if (isset($brands_by_letter['#'])): ?>
+					<button class="filter-button" data-filter="#">#</button>
+				<?php endif; ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($show_brand_count): ?>
+			<div class="brands-count">
+				Mostrando <span class="count-number" id="brands-counter"><?php echo count($brands); ?></span> 
+				<span id="brands-text">marcas</span>
+			</div>
+		<?php endif; ?>
+
+		<div class="brands-grid style-<?php echo esc_attr($display_style); ?> columns-<?php echo esc_attr($columns); ?>" id="brands-container">
+			<?php foreach($brands as $brand): 
+				$first_letter = strtoupper(substr($brand->name, 0, 1));
+				$filter_class = in_array($first_letter, $alphabet) ? $first_letter : 'other';
+				$thumbnail_id = get_term_meta($brand->term_id, 'thumbnail_id', true);
+				$image_url = $thumbnail_id ? wp_get_attachment_url($thumbnail_id) : '';
+				$brand_link = get_term_link($brand);
+				$product_count = $brand->count;
+			?>
+				<div class="brand-item" data-letter="<?php echo esc_attr($filter_class); ?>" data-name="<?php echo esc_attr(strtolower($brand->name)); ?>">
+					<a href="<?php echo esc_url($brand_link); ?>" class="brand-link">
+						<!-- <?php if($image_url): ?>
+							<img src="<?php echo esc_url($image_url); ?>" 
+								 alt="<?php echo esc_attr($brand->name); ?>" 
+								 class="brand-logo size-<?php echo esc_attr($brand_image_size); ?>">
+						<?php endif; ?> -->
+						<span class="brand-name-text"><?php echo esc_html($brand->name); ?></span>
+						<?php if($display_style === 'list'): ?>
+							<span class="brand-product-count">(<?php echo esc_html($product_count); ?> productos)</span>
+						<?php endif; ?>
+					</a>
+				</div>
+			<?php endforeach; ?>
+		</div>
+
+		<div class="brands-loading" id="brands-loading" style="display: none;">
+			<div class="loading-spinner"></div>
+			<p>Cargando marcas...</p>
+		</div>
+
+		<div class="brands-empty" id="brands-empty" style="display: none;">
+			<div class="brands-empty-icon">🔍</div>
+			<p>No se encontraron marcas con esa letra.</p>
 		</div>
 	</div>
+
+	<script>
+		// Pasar datos al frontend
+		window.ocellarisAllBrandsData = {
+			alphabet: <?php echo json_encode(array_keys($brands_by_letter)); ?>,
+			brandCount: <?php echo count($brands); ?>
+		};
+	</script>
 	<?php
 	return ob_get_clean();
 }
@@ -1354,3 +1639,548 @@ function ocellaris_checkout_shipping_filter_footer() {
 }
 add_action( 'wp_footer', 'ocellaris_checkout_shipping_filter_footer' );
 add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
+
+/**
+ * OCELLARIS PRODUCT CATALOG CUSTOMIZATIONS
+ * Funciones para personalizar la visualización de productos en el catálogo
+ */
+
+/**
+ * Get product brand name from various taxonomies
+ */
+function ocellaris_get_product_brand( $product_id = null ) {
+	if ( ! $product_id ) {
+		global $product;
+		if ( ! $product ) {
+			return '';
+		}
+		$product_id = $product->get_id();
+	}
+
+	// Try different brand taxonomies
+	$brand_taxonomies = array( 'pa_brand', 'product_brand', 'brand', 'pa_marca' );
+	
+	foreach ( $brand_taxonomies as $taxonomy ) {
+		$brand_terms = wp_get_post_terms( $product_id, $taxonomy );
+		if ( ! empty( $brand_terms ) && ! is_wp_error( $brand_terms ) ) {
+			return $brand_terms[0]->name;
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Enqueue catalog styles if we're on a shop page
+ */
+function ocellaris_enqueue_catalog_styles() {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() || is_search() ) {
+		wp_enqueue_style( 'ocellaris-catalog-styles', get_stylesheet_uri(), array(), CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_enqueue_catalog_styles', 20 );
+
+/**
+ * Force WooCommerce to use our custom product loop structure
+ */
+function ocellaris_custom_loop_structure() {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() || is_search() ) {
+		// Add custom CSS to override any conflicting styles
+		add_action( 'wp_head', 'ocellaris_force_catalog_styles', 999 );
+	}
+}
+add_action( 'wp', 'ocellaris_custom_loop_structure' );
+
+/**
+ * Force catalog styles to override any conflicting CSS
+ */
+function ocellaris_force_catalog_styles() {
+	?>
+	<style id="ocellaris-catalog-override">
+	/* Force catalog grid layout with maximum specificity */
+	body.woocommerce ul.products,
+	body.woocommerce-page ul.products,
+	.woocommerce ul.products,
+	.woocommerce-page ul.products {
+		display: grid !important;
+		grid-template-columns: repeat(3, 1fr) !important;
+		gap: 30px !important;
+		margin: 40px auto !important;
+		max-width: 1200px !important;
+		padding: 0 20px !important;
+		list-style: none !important;
+		width: 100% !important;
+		clear: both !important;
+	}
+	
+	/* Force 3 column layout - except for search page which gets 4 */
+	body.woocommerce ul.products.columns-4,
+	body.woocommerce-page ul.products.columns-4,
+	.woocommerce ul.products.columns-4,
+	.woocommerce-page ul.products.columns-4 {
+		grid-template-columns: repeat(3, 1fr) !important;
+	}
+	
+	/* Special override for search page - allow 4 columns */
+	body.search .woocommerce ul.products.columns-4,
+	body.search.woocommerce-page ul.products.columns-4 {
+		grid-template-columns: repeat(4, 1fr) !important;
+		gap: 20px !important;
+		max-width: 100% !important;
+	}
+	
+	@media (max-width: 767px) {
+		body.woocommerce ul.products,
+		body.woocommerce-page ul.products,
+		.woocommerce ul.products,
+		.woocommerce-page ul.products,
+		body.search .woocommerce ul.products.columns-4,
+		body.search.woocommerce-page ul.products.columns-4 {
+			grid-template-columns: repeat(2, 1fr) !important;
+			gap: 20px !important;
+			padding: 0 15px !important;
+		}
+	}
+	
+	@media (min-width: 768px) and (max-width: 1199px) {
+		/* Tablet view - 3 columns for search 4-column layouts */
+		body.search .woocommerce ul.products.columns-4,
+		body.search.woocommerce-page ul.products.columns-4 {
+			grid-template-columns: repeat(3, 1fr) !important;
+		}
+	}
+	
+	@media (max-width: 480px) {
+		body.woocommerce ul.products,
+		body.woocommerce-page ul.products,
+		.woocommerce ul.products,
+		.woocommerce-page ul.products {
+			grid-template-columns: 1fr !important;
+			gap: 25px !important;
+			padding: 0 10px !important;
+		}
+	}
+
+	/* Force product item styling with maximum specificity */
+	body.woocommerce ul.products li.product,
+	body.woocommerce-page ul.products li.product,
+	.woocommerce ul.products li.product,
+	.woocommerce-page ul.products li.product {
+		background: #fff !important;
+		border-radius: 8px !important;
+		overflow: hidden !important;
+		position: relative !important;
+		transition: all 0.3s ease !important;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+		border: 1px solid #e0e0e0 !important;
+		margin: 0 !important;
+		padding: 0 !important;
+		width: auto !important;
+		float: none !important;
+		display: block !important;
+		min-height: 450px !important;
+	}
+
+	body.woocommerce ul.products li.product:hover,
+	body.woocommerce-page ul.products li.product:hover,
+	.woocommerce ul.products li.product:hover,
+	.woocommerce-page ul.products li.product:hover {
+		transform: translateY(-5px) !important;
+		box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+	}
+
+	/* Product image container */
+	body.woocommerce ul.products li.product .featured-product-image,
+	body.woocommerce-page ul.products li.product .featured-product-image,
+	.woocommerce ul.products li.product .featured-product-image,
+	.woocommerce-page ul.products li.product .featured-product-image {
+		height: 250px !important;
+		overflow: hidden !important;
+		position: relative !important;
+	}
+	
+	/* Smaller image height for 4 columns in search */
+	body.search .woocommerce ul.products.columns-4 li.product .featured-product-image,
+	body.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image {
+		height: 250px !important;
+	}
+	
+	/* Ensure proper image fit for search 4 columns */
+	body.search .woocommerce ul.products.columns-4 li.product .featured-product-image img,
+	body.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image img {
+		width: 100% !important;
+		height: 100% !important;
+		object-fit: contain !important;
+		object-position: center !important;
+		background: #f8f9fa !important;
+	}
+
+	body.woocommerce ul.products li.product .featured-product-image img,
+	body.woocommerce-page ul.products li.product .featured-product-image img,
+	.woocommerce ul.products li.product .featured-product-image img,
+	.woocommerce-page ul.products li.product .featured-product-image img {
+		width: 100% !important;
+		height: 100% !important;
+		object-fit: cover !important;
+	}
+
+	/* Sale badge styling */
+	body.woocommerce ul.products li.product .featured-product-badge,
+	body.woocommerce-page ul.products li.product .featured-product-badge,
+	.woocommerce ul.products li.product .featured-product-badge,
+	.woocommerce-page ul.products li.product .featured-product-badge {
+		position: absolute !important;
+		top: 12px !important;
+		right: 12px !important;
+		z-index: 10 !important;
+	}
+
+	body.woocommerce ul.products li.product .sale-badge,
+	body.woocommerce-page ul.products li.product .sale-badge,
+	.woocommerce ul.products li.product .sale-badge,
+	.woocommerce-page ul.products li.product .sale-badge {
+		background: #dc2626 !important;
+		color: white !important;
+		padding: 6px 12px !important;
+		font-size: 11px !important;
+		font-weight: bold !important;
+		text-transform: uppercase !important;
+		display: inline-block !important;
+		position: relative !important;
+		margin-left: -8px !important;
+		margin-top: -8px !important;
+		box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3) !important;
+		border-radius: 4px 0 4px 0 !important;
+	}
+
+	/* Triángulo derecho (punta del listón) */
+	body.woocommerce ul.products li.product .sale-badge::after,
+	body.woocommerce-page ul.products li.product .sale-badge::after,
+	.woocommerce ul.products li.product .sale-badge::after,
+	.woocommerce-page ul.products li.product .sale-badge::after {
+		content: '' !important;
+		position: absolute !important;
+		right: -12px !important;
+		top: 0 !important;
+		width: 0 !important;
+		height: 0 !important;
+		border-top: 50% solid transparent !important;
+		border-bottom: 50% solid transparent !important;
+		border-left: 12px solid #dc2626 !important;
+	}
+
+	/* Corte en forma de "V" a la izquierda */
+	body.woocommerce ul.products li.product .sale-badge::before,
+	body.woocommerce-page ul.products li.product .sale-badge::before,
+	.woocommerce ul.products li.product .sale-badge::before,
+	.woocommerce-page ul.products li.product .sale-badge::before {
+		content: '' !important;
+		position: absolute !important;
+		left: 0 !important;
+		bottom: -6px !important;
+		width: 0 !important;
+		height: 0 !important;
+		border-left: 6px solid transparent !important;
+		border-right: 6px solid transparent !important;
+		border-top: 6px solid #a61b1b !important;
+	}
+
+	body.woocommerce ul.products li.product .save-text,
+	body.woocommerce-page ul.products li.product .save-text,
+	.woocommerce ul.products li.product .save-text,
+	.woocommerce-page ul.products li.product .save-text {
+		font-size: 10px !important;
+		line-height: 1 !important;
+		display: block !important;
+	}
+
+	body.woocommerce ul.products li.product .discount-percent,
+	body.woocommerce-page ul.products li.product .discount-percent,
+	.woocommerce ul.products li.product .discount-percent,
+	.woocommerce-page ul.products li.product .discount-percent {
+		font-size: 15px !important;
+		font-weight: 900 !important;
+		line-height: 1 !important;
+		display: block !important;
+		text-align: center !important;
+		width: 100% !important;
+	}
+
+	/* Product content container */
+	body.woocommerce ul.products li.product .featured-product-content,
+	body.woocommerce-page ul.products li.product .featured-product-content,
+	.woocommerce ul.products li.product .featured-product-content,
+	.woocommerce-page ul.products li.product .featured-product-content {
+		padding: 15px !important;
+		text-align: center !important;
+		min-height: 180px !important;
+		display: flex !important;
+		flex-direction: column !important;
+		justify-content: space-between !important;
+	}
+
+	/* Make sure text is visible */
+	body.woocommerce ul.products li.product .featured-product-content *,
+	body.woocommerce-page ul.products li.product .featured-product-content *,
+	.woocommerce ul.products li.product .featured-product-content *,
+	.woocommerce-page ul.products li.product .featured-product-content * {
+		color: inherit !important;
+		display: block !important;
+		visibility: visible !important;
+		opacity: 1 !important;
+	}
+
+	/* Product brand */
+	body.woocommerce ul.products li.product .featured-product-brand,
+	body.woocommerce-page ul.products li.product .featured-product-brand,
+	.woocommerce ul.products li.product .featured-product-brand,
+	.woocommerce-page ul.products li.product .featured-product-brand {
+		color: #666 !important;
+		font-size: 12px !important;
+		margin-bottom: 8px !important;
+		font-weight: 500 !important;
+		display: block !important;
+		visibility: visible !important;
+	}
+
+	/* Product title */
+	body.woocommerce ul.products li.product .featured-product-title,
+	body.woocommerce ul.products li.product h2.woocommerce-loop-product__title,
+	body.woocommerce-page ul.products li.product .featured-product-title,
+	body.woocommerce-page ul.products li.product h2.woocommerce-loop-product__title,
+	.woocommerce ul.products li.product .featured-product-title,
+	.woocommerce ul.products li.product h2.woocommerce-loop-product__title,
+	.woocommerce-page ul.products li.product .featured-product-title,
+	.woocommerce-page ul.products li.product h2.woocommerce-loop-product__title {
+		color: #333 !important;
+		font-size: 14px !important;
+		font-weight: 600 !important;
+		margin: 0 0 12px 0 !important;
+		line-height: 1.3 !important;
+		height: auto !important;
+		min-height: 36px !important;
+		display: block !important;
+		visibility: visible !important;
+	}
+
+	body.woocommerce ul.products li.product .featured-product-title a,
+	body.woocommerce ul.products li.product h2.woocommerce-loop-product__title a,
+	body.woocommerce-page ul.products li.product .featured-product-title a,
+	body.woocommerce-page ul.products li.product h2.woocommerce-loop-product__title a,
+	.woocommerce ul.products li.product .featured-product-title a,
+	.woocommerce ul.products li.product h2.woocommerce-loop-product__title a,
+	.woocommerce-page ul.products li.product .featured-product-title a,
+	.woocommerce-page ul.products li.product h2.woocommerce-loop-product__title a {
+		color: #333 !important;
+		text-decoration: none !important;
+		display: block !important;
+	}
+
+	/* Force orange button styling for catalog products */
+	body.woocommerce ul.products li.product .button,
+	body.woocommerce ul.products li.product .add_to_cart_button,
+	body.woocommerce-page ul.products li.product .button,
+	body.woocommerce-page ul.products li.product .add_to_cart_button,
+	.woocommerce ul.products li.product .button,
+	.woocommerce ul.products li.product .add_to_cart_button,
+	.woocommerce-page ul.products li.product .button,
+	.woocommerce-page ul.products li.product .add_to_cart_button {
+		background: #FF6B35 !important;
+		color: white !important;
+		border: none !important;
+		padding: 10px 20px !important;
+		border-radius: 25px !important;
+		font-weight: bold !important;
+		text-transform: uppercase !important;
+		font-size: 12px !important;
+		letter-spacing: 1px !important;
+		width: 100% !important;
+		transition: all 0.3s ease !important;
+		text-decoration: none !important;
+		display: inline-block !important;
+		text-align: center !important;
+		box-sizing: border-box !important;
+		line-height: 1.2 !important;
+		min-height: 36px !important;
+	}
+
+	body.woocommerce ul.products li.product .button:hover,
+	body.woocommerce ul.products li.product .add_to_cart_button:hover,
+	body.woocommerce-page ul.products li.product .button:hover,
+	body.woocommerce-page ul.products li.product .add_to_cart_button:hover,
+	.woocommerce ul.products li.product .button:hover,
+	.woocommerce ul.products li.product .add_to_cart_button:hover,
+	.woocommerce-page ul.products li.product .button:hover,
+	.woocommerce-page ul.products li.product .add_to_cart_button:hover {
+		background: #e55a2b !important;
+		transform: translateY(-2px) !important;
+		box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3) !important;
+	}
+
+	/* Force price styling with stronger anti-wrap rules */
+	body.woocommerce ul.products li.product .price,
+	body.woocommerce-page ul.products li.product .price,
+	.woocommerce ul.products li.product .price,
+	.woocommerce-page ul.products li.product .price,
+	body.woocommerce ul.products li.product .featured-product-price .price,
+	body.woocommerce-page ul.products li.product .featured-product-price .price,
+	.woocommerce ul.products li.product .featured-product-price .price,
+	.woocommerce-page ul.products li.product .featured-product-price .price,
+	body.woocommerce ul.products li.product .featured-product-price,
+	body.woocommerce-page ul.products li.product .featured-product-price,
+	.woocommerce ul.products li.product .featured-product-price,
+	.woocommerce-page ul.products li.product .featured-product-price {
+		color: #FF6B35 !important;
+		font-size: 18px !important;
+		font-weight: bold !important;
+		text-align: center !important;
+		margin-bottom: 12px !important;
+		display: flex !important;
+		justify-content: center !important;
+		align-items: center !important;
+		white-space: nowrap !important;
+		overflow: visible !important;
+		word-break: keep-all !important;
+		hyphens: none !important;
+		flex-wrap: nowrap !important;
+		min-width: 0 !important;
+	}
+
+	/* Prevent any wrapping on price components */
+	body.woocommerce ul.products li.product .price *,
+	body.woocommerce-page ul.products li.product .price *,
+	.woocommerce ul.products li.product .price *,
+	.woocommerce-page ul.products li.product .price *,
+	body.woocommerce ul.products li.product .featured-product-price *,
+	body.woocommerce-page ul.products li.product .featured-product-price *,
+	.woocommerce ul.products li.product .featured-product-price *,
+	.woocommerce-page ul.products li.product .featured-product-price * {
+		white-space: nowrap !important;
+		display: inline !important;
+		color: inherit !important;
+		font-size: inherit !important;
+		font-weight: inherit !important;
+		word-break: keep-all !important;
+		hyphens: none !important;
+		overflow: visible !important;
+		flex-shrink: 0 !important;
+	}
+
+	/* Price container */
+	body.woocommerce ul.products li.product .featured-product-price,
+	body.woocommerce-page ul.products li.product .featured-product-price,
+	.woocommerce ul.products li.product .featured-product-price,
+	.woocommerce-page ul.products li.product .featured-product-price {
+		margin-bottom: 12px !important;
+		min-height: 30px !important;
+		display: flex !important;
+		align-items: center !important;
+		justify-content: center !important;
+	}
+
+	/* Add to cart container */
+	body.woocommerce ul.products li.product .featured-add-to-cart,
+	body.woocommerce ul.products li.product .catalog-add-to-cart,
+	body.woocommerce-page ul.products li.product .featured-add-to-cart,
+	body.woocommerce-page ul.products li.product .catalog-add-to-cart,
+	.woocommerce ul.products li.product .featured-add-to-cart,
+	.woocommerce ul.products li.product .catalog-add-to-cart,
+	.woocommerce-page ul.products li.product .featured-add-to-cart,
+	.woocommerce-page ul.products li.product .catalog-add-to-cart {
+		width: 100% !important;
+		margin-top: auto !important;
+	}
+
+	/* Force remove any float or flex that might interfere */
+	body.woocommerce ul.products::before,
+	body.woocommerce ul.products::after,
+	body.woocommerce-page ul.products::before,
+	body.woocommerce-page ul.products::after,
+	.woocommerce ul.products::before,
+	.woocommerce ul.products::after,
+	.woocommerce-page ul.products::before,
+	.woocommerce-page ul.products::after {
+		display: none !important;
+	}
+
+	/* Hide default WooCommerce result count and ordering */
+	.woocommerce-result-count,
+	.woocommerce-ordering {
+		margin-bottom: 20px;
+	}
+	</style>
+	<script>
+	jQuery(document).ready(function($) {
+		// Force grid layout with JavaScript as backup
+		setTimeout(function() {
+			$('.woocommerce ul.products, .woocommerce-page ul.products').each(function() {
+				$(this).css({
+					'display': 'grid',
+					'grid-template-columns': 'repeat(3, 1fr)',
+					'gap': '30px',
+					'margin': '40px auto',
+					'max-width': '1200px',
+					'padding': '0 20px',
+					'list-style': 'none'
+				});
+			});
+
+			// Fix price wrapping specifically
+			$('.woocommerce ul.products li.product .price, .woocommerce ul.products li.product .featured-product-price').each(function() {
+				$(this).css({
+					'white-space': 'nowrap',
+					'display': 'flex',
+					'justify-content': 'center',
+					'align-items': 'center',
+					'flex-wrap': 'nowrap'
+				});
+				
+				// Ensure all child elements stay inline
+				$(this).find('*').css({
+					'white-space': 'nowrap',
+					'display': 'inline',
+					'word-break': 'keep-all'
+				});
+			});
+		}, 100);
+	});
+	</script>
+	<?php
+}
+
+/**
+ * Ensure WooCommerce hooks are properly loaded for catalog display
+ */
+function ocellaris_ensure_woocommerce_hooks() {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() ) {
+		// Ensure price hook is attached
+		if ( ! has_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price' ) ) {
+			add_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_loop_price', 10 );
+		}
+		
+		// Ensure add to cart button hook is attached
+		if ( ! has_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart' ) ) {
+			add_action( 'woocommerce_after_shop_loop_item', 'woocommerce_template_loop_add_to_cart', 10 );
+		}
+	}
+}
+add_action( 'wp', 'ocellaris_ensure_woocommerce_hooks' );
+
+/**
+ * Set default shop columns to 3 for better content display
+ */
+function ocellaris_shop_columns() {
+	return 3;
+}
+add_filter( 'loop_shop_columns', 'ocellaris_shop_columns', 999 );
+
+/**
+ * Force 3 columns in all WooCommerce product listings
+ */
+function ocellaris_force_3_columns() {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() ) {
+		global $woocommerce_loop;
+		$woocommerce_loop['columns'] = 3;
+	}
+}
+add_action( 'woocommerce_before_shop_loop', 'ocellaris_force_3_columns', 5 );

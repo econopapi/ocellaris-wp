@@ -6,7 +6,7 @@
   'use strict';
 
   $(document).ready(function() {
-    $('.ocellaris-featured-brands').each(function() {
+    $('.ocellaris-featured-brands.mode-carousel, .ocellaris-featured-brands:not([class*="mode-"])').each(function() {
       var $carousel = $(this);
       var $container = $carousel.find('.brands-carousel');
       var $items = $container.find('.brand-item');
