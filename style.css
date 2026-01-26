@@ -17,6 +17,17 @@ Template: astra
   --ocellaris-orange: #f15a22;
 }
 
+/** Estilos extraídos del CSS adicional del tema hijo **/
+a {
+	text-decoration: none!important;
+}
+
+.ocellaris-main-slider img {
+	border-radius: 20px!important;
+	overflow: hidden;
+}
+/** Fin de los estilos extraídos **/
+
 
 #sideline-heading {
   display: flex;
