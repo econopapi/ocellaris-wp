@@ -1674,7 +1674,7 @@ function ocellaris_get_product_brand( $product_id = null ) {
  * Enqueue catalog styles if we're on a shop page
  */
 function ocellaris_enqueue_catalog_styles() {
-	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() ) {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() || is_search() ) {
 		wp_enqueue_style( 'ocellaris-catalog-styles', get_stylesheet_uri(), array(), CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION );
 	}
 }
@@ -1684,7 +1684,7 @@ add_action( 'wp_enqueue_scripts', 'ocellaris_enqueue_catalog_styles', 20 );
  * Force WooCommerce to use our custom product loop structure
  */
 function ocellaris_custom_loop_structure() {
-	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() ) {
+	if ( is_shop() || is_product_category() || is_product_tag() || is_product_taxonomy() || is_search() ) {
 		// Add custom CSS to override any conflicting styles
 		add_action( 'wp_head', 'ocellaris_force_catalog_styles', 999 );
 	}
