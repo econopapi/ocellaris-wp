@@ -20,6 +20,17 @@ if ( empty( $product ) || ! $product->is_visible() ) {
 // Get product brand using the helper function
 $brand_name = ocellaris_get_product_brand( $product->get_id() );
 
+// Calculate discount percentage if on sale
+$discount_percentage = 0;
+$is_on_sale = $product->is_on_sale();
+if ( $is_on_sale ) {
+	$regular_price = (float) $product->get_regular_price();
+	$sale_price = (float) $product->get_sale_price();
+	if ( $regular_price && $sale_price && $regular_price > $sale_price ) {
+		$discount_percentage = round( ( ( $regular_price - $sale_price ) / $regular_price ) * 100 );
+	}
+}
+
 ?>
 <li <?php wc_product_class( 'featured-product-item ocellaris-catalog-product', $product ); ?>>
 	
@@ -27,6 +38,15 @@ $brand_name = ocellaris_get_product_brand( $product->get_id() );
 		<a href="<?php echo esc_url( get_permalink() ); ?>" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">
 			<?php echo woocommerce_get_product_thumbnail(); ?>
 		</a>
+		
+		<?php if ( $is_on_sale && $discount_percentage > 0 ) : ?>
+			<div class="featured-product-badge">
+				<span class="sale-badge">
+					<span class="save-text">DESCUENTO</span>
+					<span class="discount-percent"><?php echo $discount_percentage; ?>%</span>
+				</span>
+			</div>
+		<?php endif; ?>
 	</div>
 
 	<div class="featured-product-content">

@@ -1790,6 +1790,88 @@ function ocellaris_force_catalog_styles() {
 		object-fit: cover !important;
 	}
 
+	/* Sale badge styling */
+	body.woocommerce ul.products li.product .featured-product-badge,
+	body.woocommerce-page ul.products li.product .featured-product-badge,
+	.woocommerce ul.products li.product .featured-product-badge,
+	.woocommerce-page ul.products li.product .featured-product-badge {
+		position: absolute !important;
+		top: 12px !important;
+		right: 12px !important;
+		z-index: 10 !important;
+	}
+
+	body.woocommerce ul.products li.product .sale-badge,
+	body.woocommerce-page ul.products li.product .sale-badge,
+	.woocommerce ul.products li.product .sale-badge,
+	.woocommerce-page ul.products li.product .sale-badge {
+		background: #dc2626 !important;
+		color: white !important;
+		padding: 6px 12px !important;
+		font-size: 11px !important;
+		font-weight: bold !important;
+		text-transform: uppercase !important;
+		display: inline-block !important;
+		position: relative !important;
+		margin-left: -8px !important;
+		margin-top: -8px !important;
+		box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3) !important;
+		border-radius: 4px 0 4px 0 !important;
+	}
+
+	/* Triángulo derecho (punta del listón) */
+	body.woocommerce ul.products li.product .sale-badge::after,
+	body.woocommerce-page ul.products li.product .sale-badge::after,
+	.woocommerce ul.products li.product .sale-badge::after,
+	.woocommerce-page ul.products li.product .sale-badge::after {
+		content: '' !important;
+		position: absolute !important;
+		right: -12px !important;
+		top: 0 !important;
+		width: 0 !important;
+		height: 0 !important;
+		border-top: 50% solid transparent !important;
+		border-bottom: 50% solid transparent !important;
+		border-left: 12px solid #dc2626 !important;
+	}
+
+	/* Corte en forma de "V" a la izquierda */
+	body.woocommerce ul.products li.product .sale-badge::before,
+	body.woocommerce-page ul.products li.product .sale-badge::before,
+	.woocommerce ul.products li.product .sale-badge::before,
+	.woocommerce-page ul.products li.product .sale-badge::before {
+		content: '' !important;
+		position: absolute !important;
+		left: 0 !important;
+		bottom: -6px !important;
+		width: 0 !important;
+		height: 0 !important;
+		border-left: 6px solid transparent !important;
+		border-right: 6px solid transparent !important;
+		border-top: 6px solid #a61b1b !important;
+	}
+
+	body.woocommerce ul.products li.product .save-text,
+	body.woocommerce-page ul.products li.product .save-text,
+	.woocommerce ul.products li.product .save-text,
+	.woocommerce-page ul.products li.product .save-text {
+		font-size: 10px !important;
+		line-height: 1 !important;
+		display: block !important;
+	}
+
+	body.woocommerce ul.products li.product .discount-percent,
+	body.woocommerce-page ul.products li.product .discount-percent,
+	.woocommerce ul.products li.product .discount-percent,
+	.woocommerce-page ul.products li.product .discount-percent {
+		font-size: 15px !important;
+		font-weight: 900 !important;
+		line-height: 1 !important;
+		display: block !important;
+		text-align: center !important;
+		width: 100% !important;
+	}
+
 	/* Product content container */
 	body.woocommerce ul.products li.product .featured-product-content,
 	body.woocommerce-page ul.products li.product .featured-product-content,
