@@ -392,6 +392,10 @@ function ocellaris_register_featured_products_block() {
 					'type' => 'boolean',
 					'default' => false,
 				),
+				'randomizeProducts' => array(
+					'type' => 'boolean',
+					'default' => false,
+				),
 			),
 		)
 	);
@@ -410,13 +414,20 @@ function ocellaris_render_featured_products_block($attributes) {
 	$selected_tags = isset($attributes['selectedTags']) ? $attributes['selectedTags'] : array();
 	$show_on_sale = isset($attributes['showOnSale']) ? $attributes['showOnSale'] : false;
 	$show_featured = isset($attributes['showFeatured']) ? $attributes['showFeatured'] : false;
+	$randomize_products = isset($attributes['randomizeProducts']) ? $attributes['randomizeProducts'] : false;
 
 	// Preparar argumentos para WP_Query
 	$args = array(
 		'post_type' => 'product',
 		'posts_per_page' => $products_to_show,
 		'post_status' => 'publish',
-		'meta_query' => array(),
+		'meta_query' => array(
+			array(
+				'key' => '_stock_status',
+				'value' => 'instock',
+				'compare' => '='
+			)
+		),
 		'tax_query' => array(),
 	);
 
@@ -424,8 +435,17 @@ function ocellaris_render_featured_products_block($attributes) {
 	switch ($filter_type) {
 		case 'manual':
 			if (!empty($selected_products)) {
-				$args['post__in'] = $selected_products;
-				$args['orderby'] = 'post__in';
+				if ($randomize_products) {
+					// Si queremos orden aleatorio, no usar post__in con orderby
+					$args['post__in'] = $selected_products;
+					$args['orderby'] = 'rand';
+				} else {
+					// Orden normal según selección
+					$args['post__in'] = $selected_products;
+					$args['orderby'] = 'post__in';
+				}
+				// Aumentar el límite para compensar productos fuera de stock
+				$args['posts_per_page'] = count($selected_products) * 2; // multiplicar por 2 para asegurar suficientes productos
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay productos seleccionados.</p></div>';
 			}
@@ -447,6 +467,9 @@ function ocellaris_render_featured_products_block($attributes) {
 					'type' => 'NUMERIC'
 				)
 			);
+			if ($randomize_products) {
+				$args['orderby'] = 'rand';
+			}
 			break;
 
 		case 'featured':
@@ -455,6 +478,9 @@ function ocellaris_render_featured_products_block($attributes) {
 				'field' => 'name',
 				'terms' => 'featured',
 			);
+			if ($randomize_products) {
+				$args['orderby'] = 'rand';
+			}
 			break;
 
 		case 'tags':
@@ -464,6 +490,9 @@ function ocellaris_render_featured_products_block($attributes) {
 					'field' => 'term_id',
 					'terms' => $selected_tags,
 				);
+				if ($randomize_products) {
+					$args['orderby'] = 'rand';
+				}
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay etiquetas seleccionadas.</p></div>';
 			}
@@ -476,8 +505,13 @@ function ocellaris_render_featured_products_block($attributes) {
 		return '<div class="ocellaris-featured-products"><p>No se encontraron productos.</p></div>';
 	}
 
-	// Usar el número de productos que realmente se van a mostrar
-	$displayed_count = min($products_to_show, $products->found_posts);
+	// Para selección manual, determinar cuántos productos en stock tenemos disponibles
+	if ($filter_type === 'manual') {
+		$displayed_count = min(count($selected_products), $products->found_posts);
+	} else {
+		$displayed_count = min($products_to_show, $products->found_posts);
+	}
+	
 	$grid_class = 'products-count-' . $displayed_count;
 
 	ob_start();
@@ -488,11 +522,24 @@ function ocellaris_render_featured_products_block($attributes) {
 			<h2 class="ocellaris-featured-products-title"><?php echo esc_html($title); ?></h2>
 		<?php endif; ?>
 		
-		<!-- DEBUG: Mostrando <?php echo $displayed_count; ?> productos con clase <?php echo $grid_class; ?> -->
 		<div class="featured-products-grid <?php echo esc_attr($grid_class); ?>">
-			<?php while ($products->have_posts()): $products->the_post(); 
+			<?php 
+			$products_displayed = 0;
+			$max_products = ($filter_type === 'manual') ? count($selected_products) : $products_to_show;
+			
+			while ($products->have_posts() && $products_displayed < $max_products): 
+				$products->the_post(); 
 				global $product;
-				if (!$product || !$product->is_visible()) continue;
+				
+				// Skip if product is not valid or not visible
+				if (!$product || !$product->is_visible()) {
+					continue;
+				}
+				
+				// Verificar stock adicional por si acaso
+				if (!$product->is_in_stock()) {
+					continue;
+				}
 				
 				$product_id = get_the_ID();
 				$is_on_sale = $product->is_on_sale();
@@ -509,6 +556,8 @@ function ocellaris_render_featured_products_block($attributes) {
 						$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
 					}
 				}
+				
+				$products_displayed++;
 			?>
 			<div class="featured-product-item <?php echo $is_on_sale ? 'on-sale' : ''; ?> <?php echo $is_featured ? 'featured' : ''; ?>">
 				

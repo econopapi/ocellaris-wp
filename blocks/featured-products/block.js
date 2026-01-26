@@ -47,6 +47,10 @@
       showFeatured: {
         type: 'boolean',
         default: false
+      },
+      randomizeProducts: {
+        type: 'boolean',
+        default: false
       }
     },
 
@@ -186,6 +190,14 @@
               },
               min: 1,
               max: 12
+            }),
+            el(ToggleControl, {
+              label: 'Mostrar productos aleatorios',
+              help: 'Los productos se mostrarán en orden aleatorio cada vez que se cargue la página',
+              checked: attributes.randomizeProducts,
+              onChange: function(value) {
+                setAttributes({ randomizeProducts: value });
+              }
             })
           ]),
           
