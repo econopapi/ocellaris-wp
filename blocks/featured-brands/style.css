@@ -7,6 +7,70 @@
   position: relative;
 }
 
+/* Grid Mode Styles */
+.ocellaris-featured-brands.mode-grid .brands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ocellaris-featured-brands.mode-grid .brand-item {
+  padding: 0;
+  width: 100%;
+}
+
+.ocellaris-featured-brands.mode-grid .brand-link {
+  height: 120px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 25px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.ocellaris-featured-brands.mode-grid .brand-link:hover {
+  border-color: var(--ocellaris-blue);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.15);
+  transform: translateY(-3px);
+}
+
+.ocellaris-featured-brands.mode-grid .brand-logo {
+  max-width: 100%;
+  max-height: 70px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(80%);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.ocellaris-featured-brands.mode-grid .brand-link:hover .brand-logo {
+  filter: grayscale(0%);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.ocellaris-featured-brands.mode-grid .brand-name-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.ocellaris-featured-brands.mode-grid .brand-link:hover .brand-name-text {
+  color: var(--ocellaris-blue);
+}
+
 .brands-title {
   text-align: center;
   font-size: 2rem;
@@ -175,7 +239,64 @@
   color: var(--ocellaris-blue);
 }
 
-/* Responsive Styles */
+/* Grid Mode Responsive Styles */
+@media (max-width: 1024px) {
+  .ocellaris-featured-brands.mode-grid .brands-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-link {
+    height: 110px;
+    padding: 20px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-logo {
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .ocellaris-featured-brands.mode-grid .brands-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-link {
+    height: 100px;
+    padding: 15px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-logo {
+    max-height: 55px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-name-text {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .ocellaris-featured-brands.mode-grid .brands-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-link {
+    height: 90px;
+    padding: 12px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-logo {
+    max-height: 50px;
+  }
+  
+  .ocellaris-featured-brands.mode-grid .brand-name-text {
+    font-size: 0.9rem;
+  }
+}
+
+/* Carousel Mode Responsive Styles */
 @media (max-width: 1024px) {
   .brands-carousel-wrapper {
     gap: 15px;
