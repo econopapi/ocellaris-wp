@@ -323,6 +323,88 @@ add_action('init', 'ocellaris_register_featured_brands_block');
 
 
 /**
+ * OCELLARIS CUSTOM ALL BRANDS BLOCK
+ * Implementación de bloque personalizado para mostrar todas las marcas
+ * con filtro alfabético y diseño responsive.
+ */
+
+/**
+ * Register Ocellaris All Brands Block
+ */
+function ocellaris_register_all_brands_block() {
+	// register block script
+	wp_register_script(
+		'ocellaris-all-brands-block',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/block.js',
+		array('wp-blocks', 'wp-element', 'wp-components'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	// register block styles
+	wp_register_style(
+		'ocellaris-all-brands-block-editor',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/editor.css',
+		array('wp-edit-blocks'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	wp_register_style(
+		'ocellaris-all-brands-block',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/style.css',
+		array(),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	// register frontend script for filtering
+	wp_register_script(
+		'ocellaris-all-brands-frontend',
+		get_stylesheet_directory_uri() . '/blocks/all-brands/frontend.js',
+		array('jquery'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+
+	// register the block
+	register_block_type(
+		'ocellaris/all-brands',
+		array(
+			'editor_script' => 'ocellaris-all-brands-block',
+			'editor_style' => 'ocellaris-all-brands-block-editor',
+			'style' => 'ocellaris-all-brands-block',
+			'render_callback' => 'ocellaris_render_all_brands_block',
+			'attributes' => array(
+				'title' => array(
+					'type' => 'string',
+					'default' => 'TODAS NUESTRAS MARCAS',
+				),
+				'showAlphabetFilter' => array(
+					'type' => 'boolean',
+					'default' => true,
+				),
+				'columns' => array(
+					'type' => 'number',
+					'default' => 4,
+				),
+				'displayStyle' => array(
+					'type' => 'string',
+					'default' => 'grid',
+				),
+				'showBrandCount' => array(
+					'type' => 'boolean',
+					'default' => true,
+				),
+				'brandImageSize' => array(
+					'type' => 'string',
+					'default' => 'medium',
+				),
+			),
+		)
+	);
+}
+add_action('init', 'ocellaris_register_all_brands_block');
+
+
+/**
  * OCELLARIS CUSTOM FEATURED PRODUCTS BLOCK
  * Implementación de bloque personalizado para mostrar productos destacados
  * con diferentes filtros: manual, por etiquetas, ofertas, etc.
@@ -700,6 +782,132 @@ function ocellaris_render_featured_brands_block($attributes) {
 			</button>
 		</div>
 	</div>
+	<?php
+	return ob_get_clean();
+}
+
+
+/**
+ * Render Ocellaris All Brands Block
+ */
+function ocellaris_render_all_brands_block($attributes) {
+	$title = isset($attributes['title']) ? $attributes['title'] : 'TODAS NUESTRAS MARCAS';
+	$show_alphabet_filter = isset($attributes['showAlphabetFilter']) ? $attributes['showAlphabetFilter'] : true;
+	$columns = isset($attributes['columns']) ? $attributes['columns'] : 4;
+	$display_style = isset($attributes['displayStyle']) ? $attributes['displayStyle'] : 'grid';
+	$show_brand_count = isset($attributes['showBrandCount']) ? $attributes['showBrandCount'] : true;
+	$brand_image_size = isset($attributes['brandImageSize']) ? $attributes['brandImageSize'] : 'medium';
+
+	// enqueue frontend script
+	wp_enqueue_script('ocellaris-all-brands-frontend');
+
+	// Get all brands from WooCommerce
+	$brands = get_terms(array(
+		'taxonomy' => 'product_brand',
+		'orderby' => 'name',
+		'order' => 'ASC',
+		'hide_empty' => true,
+	));
+
+	if(empty($brands) || is_wp_error($brands)) {
+		return '<div class="ocellaris-all-brands">
+					<div class="brands-empty">
+						<div class="brands-empty-icon">🏷️</div>
+						<p>No se encontraron marcas disponibles.</p>
+					</div>
+				</div>';
+	}
+
+	// Organize brands by alphabet
+	$brands_by_letter = array();
+	$alphabet = range('A', 'Z');
+	$other_letters = array();
+
+	foreach($brands as $brand) {
+		$first_letter = strtoupper(substr($brand->name, 0, 1));
+		if(in_array($first_letter, $alphabet)) {
+			$brands_by_letter[$first_letter][] = $brand;
+		} else {
+			$other_letters[] = $brand;
+		}
+	}
+
+	// Add numbers/symbols to the end
+	if(!empty($other_letters)) {
+		$brands_by_letter['#'] = $other_letters;
+	}
+
+	ob_start();
+	?>
+	<div class="ocellaris-all-brands" data-columns="<?php echo esc_attr($columns); ?>" data-style="<?php echo esc_attr($display_style); ?>">
+		<?php if (!empty($title)): ?>
+			<h2 class="all-brands-title"><?php echo esc_html($title); ?></h2>
+		<?php endif; ?>
+
+		<?php if ($show_alphabet_filter): ?>
+			<div class="alphabet-filter">
+				<button class="filter-button active" data-filter="all">TODAS</button>
+				<?php foreach ($alphabet as $letter): ?>
+					<?php if (isset($brands_by_letter[$letter])): ?>
+						<button class="filter-button" data-filter="<?php echo esc_attr($letter); ?>"><?php echo esc_html($letter); ?></button>
+					<?php endif; ?>
+				<?php endforeach; ?>
+				<?php if (isset($brands_by_letter['#'])): ?>
+					<button class="filter-button" data-filter="#">#</button>
+				<?php endif; ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ($show_brand_count): ?>
+			<div class="brands-count">
+				Mostrando <span class="count-number" id="brands-counter"><?php echo count($brands); ?></span> 
+				<span id="brands-text">marcas</span>
+			</div>
+		<?php endif; ?>
+
+		<div class="brands-grid style-<?php echo esc_attr($display_style); ?> columns-<?php echo esc_attr($columns); ?>" id="brands-container">
+			<?php foreach($brands as $brand): 
+				$first_letter = strtoupper(substr($brand->name, 0, 1));
+				$filter_class = in_array($first_letter, $alphabet) ? $first_letter : 'other';
+				$thumbnail_id = get_term_meta($brand->term_id, 'thumbnail_id', true);
+				$image_url = $thumbnail_id ? wp_get_attachment_url($thumbnail_id) : '';
+				$brand_link = get_term_link($brand);
+				$product_count = $brand->count;
+			?>
+				<div class="brand-item" data-letter="<?php echo esc_attr($filter_class); ?>" data-name="<?php echo esc_attr(strtolower($brand->name)); ?>">
+					<a href="<?php echo esc_url($brand_link); ?>" class="brand-link">
+						<!-- <?php if($image_url): ?>
+							<img src="<?php echo esc_url($image_url); ?>" 
+								 alt="<?php echo esc_attr($brand->name); ?>" 
+								 class="brand-logo size-<?php echo esc_attr($brand_image_size); ?>">
+						<?php endif; ?> -->
+						<span class="brand-name-text"><?php echo esc_html($brand->name); ?></span>
+						<?php if($display_style === 'list'): ?>
+							<span class="brand-product-count">(<?php echo esc_html($product_count); ?> productos)</span>
+						<?php endif; ?>
+					</a>
+				</div>
+			<?php endforeach; ?>
+		</div>
+
+		<div class="brands-loading" id="brands-loading" style="display: none;">
+			<div class="loading-spinner"></div>
+			<p>Cargando marcas...</p>
+		</div>
+
+		<div class="brands-empty" id="brands-empty" style="display: none;">
+			<div class="brands-empty-icon">🔍</div>
+			<p>No se encontraron marcas con esa letra.</p>
+		</div>
+	</div>
+
+	<script>
+		// Pasar datos al frontend
+		window.ocellarisAllBrandsData = {
+			alphabet: <?php echo json_encode(array_keys($brands_by_letter)); ?>,
+			brandCount: <?php echo count($brands); ?>
+		};
+	</script>
 	<?php
 	return ob_get_clean();
 }
