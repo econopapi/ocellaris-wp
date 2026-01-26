@@ -278,6 +278,56 @@ a {
   margin-bottom: 40px;
 }
 
+/* Specific overrides for search page 4 columns */
+.search .woocommerce ul.products.columns-4,
+.search.woocommerce-page ul.products.columns-4 {
+  grid-template-columns: repeat(4, 1fr) !important;
+  max-width: 100% !important;
+  gap: 20px !important;
+}
+
+/* Ensure search page products use correct sizing for 4 columns */
+.search .woocommerce ul.products.columns-4 li.product,
+.search.woocommerce-page ul.products.columns-4 li.product {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Adjust image height for better fit in 4 columns */
+.search .woocommerce ul.products.columns-4 li.product .featured-product-image,
+.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image {
+  height: 250px !important;
+}
+
+/* Ensure images show complete without cropping in search 4-column layout */
+.search .woocommerce ul.products.columns-4 li.product .featured-product-image img,
+.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image img {
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #f8f9fa !important;
+}
+
+/* Mobile and tablet responsiveness for search */
+@media (max-width: 1199px) {
+  .search .woocommerce ul.products.columns-4,
+  .search.woocommerce-page ul.products.columns-4 {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .search .woocommerce ul.products.columns-4,
+  .search.woocommerce-page ul.products.columns-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px !important;
+  }
+  
+  .search .woocommerce ul.products.columns-4 li.product .featured-product-image,
+  .search.woocommerce-page ul.products.columns-4 li.product .featured-product-image {
+    height: 250px !important;
+  }
+}
+
 .search-posts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

@@ -1713,7 +1713,7 @@ function ocellaris_force_catalog_styles() {
 		clear: both !important;
 	}
 	
-	/* Force 3 column layout */
+	/* Force 3 column layout - except for search page which gets 4 */
 	body.woocommerce ul.products.columns-4,
 	body.woocommerce-page ul.products.columns-4,
 	.woocommerce ul.products.columns-4,
@@ -1721,14 +1721,32 @@ function ocellaris_force_catalog_styles() {
 		grid-template-columns: repeat(3, 1fr) !important;
 	}
 	
+	/* Special override for search page - allow 4 columns */
+	body.search .woocommerce ul.products.columns-4,
+	body.search.woocommerce-page ul.products.columns-4 {
+		grid-template-columns: repeat(4, 1fr) !important;
+		gap: 20px !important;
+		max-width: 100% !important;
+	}
+	
 	@media (max-width: 767px) {
 		body.woocommerce ul.products,
 		body.woocommerce-page ul.products,
 		.woocommerce ul.products,
-		.woocommerce-page ul.products {
+		.woocommerce-page ul.products,
+		body.search .woocommerce ul.products.columns-4,
+		body.search.woocommerce-page ul.products.columns-4 {
 			grid-template-columns: repeat(2, 1fr) !important;
 			gap: 20px !important;
 			padding: 0 15px !important;
+		}
+	}
+	
+	@media (min-width: 768px) and (max-width: 1199px) {
+		/* Tablet view - 3 columns for search 4-column layouts */
+		body.search .woocommerce ul.products.columns-4,
+		body.search.woocommerce-page ul.products.columns-4 {
+			grid-template-columns: repeat(3, 1fr) !important;
 		}
 	}
 	
@@ -1779,6 +1797,22 @@ function ocellaris_force_catalog_styles() {
 		height: 250px !important;
 		overflow: hidden !important;
 		position: relative !important;
+	}
+	
+	/* Smaller image height for 4 columns in search */
+	body.search .woocommerce ul.products.columns-4 li.product .featured-product-image,
+	body.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image {
+		height: 250px !important;
+	}
+	
+	/* Ensure proper image fit for search 4 columns */
+	body.search .woocommerce ul.products.columns-4 li.product .featured-product-image img,
+	body.search.woocommerce-page ul.products.columns-4 li.product .featured-product-image img {
+		width: 100% !important;
+		height: 100% !important;
+		object-fit: contain !important;
+		object-position: center !important;
+		background: #f8f9fa !important;
 	}
 
 	body.woocommerce ul.products li.product .featured-product-image img,
