@@ -83,9 +83,11 @@
 
       function loadProducts() {
         setIsLoading(true);
-        
+        var allProducts = [];
+        var page = 1;
+        var perPage = 100;
         var params = {
-          per_page: 50,
+          per_page: perPage,
           status: 'publish'
         };
 
@@ -98,15 +100,31 @@
           params.tag = attributes.selectedTags.join(',');
         }
 
-        apiFetch({
-          path: wp.url.addQueryArgs('/wc/v3/products', params)
-        }).then(function (data) {
-          setProducts(data);
-          setIsLoading(false);
-        }).catch(function (error) {
-          console.error('Error loading products:', error);
-          setIsLoading(false);
-        });
+        function fetchPage(pageNum) {
+          // Clonar params para evitar mutaciones entre llamadas
+          var pageParams = Object.assign({}, params, { page: pageNum });
+          return apiFetch({
+            path: wp.url.addQueryArgs('/wc/v3/products', pageParams)
+          });
+        }
+
+        function fetchAllProducts() {
+          fetchPage(page).then(function (data) {
+            allProducts = allProducts.concat(data);
+            if (data.length === perPage) {
+              page++;
+              fetchAllProducts();
+            } else {
+              setProducts(allProducts);
+              setIsLoading(false);
+            }
+          }).catch(function (error) {
+            console.error('Error loading products:', error);
+            setIsLoading(false);
+          });
+        }
+
+        fetchAllProducts();
       }
 
       function loadTags() {
@@ -159,7 +177,13 @@
 
       // Filtrar productos por búsqueda
       var filteredProducts = products.filter(function(product) {
-        return product.name.toLowerCase().includes(searchTerm.toLowerCase());
+        var term = searchTerm.toLowerCase();
+        return (
+          (product.name && product.name.toLowerCase().includes(term)) ||
+          (product.sku && product.sku.toLowerCase().includes(term)) ||
+          (product.description && product.description.toLowerCase().includes(term)) ||
+          (product.short_description && product.short_description.toLowerCase().includes(term))
+        );
       });
 
       // Obtener productos seleccionados para mostrar
