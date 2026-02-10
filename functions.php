@@ -2199,3 +2199,154 @@ function ocellaris_force_3_columns() {
 	}
 }
 add_action( 'woocommerce_before_shop_loop', 'ocellaris_force_3_columns', 5 );
+
+
+/**
+ * ==========================================================================
+ * OCELLARIS MSI PROMOTIONS MODULE
+ * Sistema de gestión de Meses Sin Intereses (MSI) por pasarela de pago.
+ * Permite configurar qué productos son elegibles para MSI y a cuántos meses.
+ * ==========================================================================
+ */
+
+// Include admin page
+require_once get_stylesheet_directory() . '/includes/msi-promotions/admin-page.php';
+
+/**
+ * Enqueue MSI checkout control scripts and styles
+ * Only loads on the checkout page when the feature is enabled
+ */
+function ocellaris_msi_enqueue_checkout_assets() {
+	// Only on checkout
+	if ( ! is_checkout() ) {
+		return;
+	}
+
+	// Check if feature is enabled
+	$enabled = get_option( 'ocellaris_msi_mp_enabled', '0' );
+	if ( $enabled !== '1' ) {
+		return;
+	}
+
+	// Get MSI product config
+	$msi_products = get_option( 'ocellaris_msi_mp_products', array() );
+	if ( ! is_array( $msi_products ) ) {
+		$msi_products = array();
+	}
+
+	// Analyze cart contents
+	$cart_analysis = ocellaris_msi_analyze_cart( $msi_products );
+
+	// Enqueue CSS
+	wp_enqueue_style(
+		'ocellaris-msi-checkout-css',
+		get_stylesheet_directory_uri() . '/assets/css/msi-checkout-control.css',
+		array(),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+	);
+
+	// Enqueue JS
+	wp_enqueue_script(
+		'ocellaris-msi-checkout-js',
+		get_stylesheet_directory_uri() . '/assets/js/msi-checkout-control.js',
+		array( 'jquery' ),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+
+	// Pass config to JS
+	$mixed_msg = get_option(
+		'ocellaris_msi_mp_mixed_cart_message',
+		'Algunos productos de tu carrito no son elegibles para Meses Sin Intereses. Para comprar a MSI, retira del carrito los productos que no participan en esta promoción.'
+	);
+
+	wp_localize_script(
+		'ocellaris-msi-checkout-js',
+		'OcellarisMSI',
+		array(
+			'enabled'          => true,
+			'msiStatus'        => $cart_analysis['status'],     // 'all_msi', 'mixed', 'none_msi'
+			'allowedMonths'    => $cart_analysis['allowed_months'], // e.g. [1, 3, 6]
+			'mixedCartMessage' => $mixed_msg,
+		)
+	);
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_msi_enqueue_checkout_assets' );
+
+/**
+ * Analyze cart contents to determine MSI eligibility
+ *
+ * @param array $msi_products The MSI product configuration from admin
+ * @return array {
+ *     @type string $status         'all_msi' | 'mixed' | 'none_msi'
+ *     @type array  $allowed_months Array of month values allowed (always includes 1)
+ * }
+ */
+function ocellaris_msi_analyze_cart( $msi_products ) {
+	$result = array(
+		'status'         => 'none_msi',
+		'allowed_months' => array( 1 ), // 1 month (contado) is always allowed
+	);
+
+	if ( ! function_exists( 'WC' ) || ! WC()->cart ) {
+		return $result;
+	}
+
+	$cart_items    = WC()->cart->get_cart();
+	$has_msi       = false;
+	$has_non_msi   = false;
+	$common_months = null; // Will hold the intersection of months
+
+	foreach ( $cart_items as $cart_item ) {
+		$product_id = $cart_item['product_id'];
+
+		// Also check variation's parent product ID
+		$variation_id = isset( $cart_item['variation_id'] ) ? $cart_item['variation_id'] : 0;
+
+		// Check if this product (or its parent) is in the MSI whitelist
+		$is_msi_product = false;
+		$product_months = array();
+
+		if ( isset( $msi_products[ $product_id ] ) ) {
+			$is_msi_product = true;
+			$product_months = $msi_products[ $product_id ]['months'];
+		} elseif ( $variation_id > 0 && isset( $msi_products[ $variation_id ] ) ) {
+			$is_msi_product = true;
+			$product_months = $msi_products[ $variation_id ]['months'];
+		}
+
+		if ( $is_msi_product ) {
+			$has_msi = true;
+
+			// Calculate intersection of allowed months across all MSI products
+			if ( $common_months === null ) {
+				$common_months = $product_months;
+			} else {
+				$common_months = array_values( array_intersect( $common_months, $product_months ) );
+			}
+		} else {
+			$has_non_msi = true;
+		}
+	}
+
+	// Determine status
+	if ( $has_msi && ! $has_non_msi ) {
+		$result['status'] = 'all_msi';
+		// Allowed months = 1 (contado) + intersection of all MSI products' months
+		$result['allowed_months'] = array_merge( array( 1 ), $common_months ?: array() );
+		sort( $result['allowed_months'] );
+	} elseif ( $has_msi && $has_non_msi ) {
+		$result['status'] = 'mixed';
+		// Mixed cart = only 1 month (contado)
+		$result['allowed_months'] = array( 1 );
+	} else {
+		$result['status'] = 'none_msi';
+		$result['allowed_months'] = array( 1 );
+	}
+
+	return $result;
+}
+
+/**
+ * END OF OCELLARIS MSI PROMOTIONS MODULE
+ */
