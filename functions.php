@@ -25,6 +25,21 @@ function child_enqueue_styles() {
 
 add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
 
+// /**
+//  * TEMPORAL: REDIRECCIÓN DE TODO LO RELACIONADO A WOOCOMMERCE AL ECOMMERCE ANTERIOR
+//  * Esto es una solución temporal para poder deplegar este desarrollo en el dominio definitivo,
+//  * mientras se resuelve el tema de la pasarela de pago.
+//  */
+// function ocellaris_redirect_woocommerce_pages() {
+// 	$current_store = "https://ocellaris.com.mx/productos";
+// 	if(is_shop() || is_product() || is_product_tag() || is_cart() ||
+// 	is_checkout() || is_account_page() || is_wc_endpoint_url() || is_woocommerce()){
+// 		wp_redirect($current_store, 302); // 302, redirección temporal
+// 		exit;
+// 	}
+// }
+// add_action('template_redirect', 'ocellaris_redirect_woocommerce_pages');
+
 /**
  * OCELLARIS CUSTOM HEADER
  * Implementación de un encabezado personalizado para el tema Astra.
