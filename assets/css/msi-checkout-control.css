@@ -1,0 +1,62 @@
+/**
+ * Ocellaris MSI Control - Checkout Styles
+ * 
+ * Estilos para el disclaimer de MSI en el checkout de MercadoPago.
+ * 
+ * @package Ocellaris Custom Astra
+ * @since 1.1.0
+ */
+
+/* Disclaimer for mixed cart */
+.ocellaris-msi-disclaimer {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin-top: 12px;
+	padding: 12px 16px;
+	background: #FFF8E1;
+	border: 1px solid #FFD54F;
+	border-left: 4px solid #FFA000;
+	border-radius: 4px;
+	font-size: 13px;
+	line-height: 1.5;
+	color: #5D4037;
+	animation: ocellarisMsiFadeIn 0.3s ease;
+}
+
+.ocellaris-msi-disclaimer-icon {
+	flex-shrink: 0;
+	font-size: 18px;
+	color: #FFA000;
+	line-height: 1.2;
+}
+
+.ocellaris-msi-disclaimer-text {
+	flex: 1;
+}
+
+/* Locked installments select visual feedback */
+#form-checkout__installments[disabled] {
+	background-color: #f5f5f5 !important;
+	border-color: #ddd !important;
+}
+
+/* Fade-in animation */
+@keyframes ocellarisMsiFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-5px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+	.ocellaris-msi-disclaimer {
+		font-size: 12px;
+		padding: 10px 12px;
+	}
+}
