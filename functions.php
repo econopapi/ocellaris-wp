@@ -81,6 +81,18 @@ add_action('wp_enqueue_scripts', 'ocellaris_custom_header_assets');
 
 
 /**
+ * Cart Fragments: update cart count badge dynamically via AJAX
+ */
+function ocellaris_cart_count_fragment( $fragments ) {
+	$count = WC()->cart->get_cart_contents_count();
+	$style = $count === 0 ? ' style="display:none;"' : '';
+	$fragments['.ocellaris-cart-count'] = '<span class="ocellaris-cart-count"' . $style . '>' . esc_html( $count ) . '</span>';
+	return $fragments;
+}
+add_filter( 'woocommerce_add_to_cart_fragments', 'ocellaris_cart_count_fragment' );
+
+
+/**
  * Remove Astra Header
  */
 function ocellaris_remove_astra_header() {
