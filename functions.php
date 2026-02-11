@@ -1638,22 +1638,8 @@ function ocellaris_checkout_shipping_filter_script() {
 }
 add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
 
-/**
- * BACKUP: Cargar script directamente en footer si estamos en checkout
- */
-function ocellaris_checkout_shipping_filter_footer() {
-	// Verificar si estamos en checkout
-	if (strpos($_SERVER['REQUEST_URI'], '/checkout') !== false) {
-		?>
-		<script>
-		console.log('🔥 DIRECT SCRIPT INJECTION!');
-		</script>
-		<script type="text/javascript" src="<?php echo get_stylesheet_directory_uri(); ?>/assets/js/checkout-shipping-filter.js?v=<?php echo time(); ?>"></script>
-		<?php
-	}
-}
-add_action( 'wp_footer', 'ocellaris_checkout_shipping_filter_footer' );
-add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
+// Note: Backup footer injection removed — the wp_enqueue_scripts hook above
+// is sufficient. The duplicate add_action was also removed to prevent double-loading.
 
 /**
  * OCELLARIS PRODUCT CATALOG CUSTOMIZATIONS
