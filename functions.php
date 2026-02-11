@@ -680,7 +680,7 @@ function ocellaris_render_featured_products_block($attributes) {
 							<span class="save-text">DESCUENTO</span><br>
 							<span class="discount-percent"><?php echo $discount_percentage; ?>%</span>
 						</span>
-					<?php else: ?>
+					<?php elseif (!$is_msi_eligible): ?>
 						<span class="brs-badge">Recomendación Ocellaris</span>
 					<?php endif; ?>
 				</div>
