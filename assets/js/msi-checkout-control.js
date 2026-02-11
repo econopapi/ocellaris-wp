@@ -4,8 +4,10 @@
  * Controla la disponibilidad de cuotas (MSI) en el checkout de MercadoPago
  * basándose en la whitelist de productos configurada en el admin.
  * 
+ * Usa un patrón de polling periódico (similar al shipping filter) para
+ * garantizar resiliencia ante recargas AJAX del checkout (e.g. Envia.com).
+ * 
  * @package Ocellaris Custom Astra
- * @since 1.1.0
  */
 (function($) {
 	'use strict';
@@ -22,7 +24,10 @@
 	var allowedMonths    = config.allowedMonths;     // array of allowed month values e.g. [1, 3, 6]
 	var mixedCartMessage = config.mixedCartMessage;  // disclaimer text
 	var disclaimerShown  = false;
-	var observerActive   = false;
+
+	// Track the last select element we processed to detect DOM replacements
+	var lastProcessedSelect = null;
+	var lastProcessedOptionsCount = 0;
 
 	/**
 	 * Should we restrict installments?
@@ -31,6 +36,41 @@
 	 */
 	function shouldRestrict() {
 		return msiStatus === 'mixed' || msiStatus === 'none_msi';
+	}
+
+	/**
+	 * Check if the select has already been processed correctly
+	 * Returns true if no action is needed
+	 */
+	function isAlreadyProcessed(selectEl) {
+		if (!selectEl) return false;
+
+		// If the DOM element changed (checkout reloaded), we need to reprocess
+		if (selectEl !== lastProcessedSelect) return false;
+
+		var currentOptionsCount = selectEl.querySelectorAll('option[value]:not([value=""])').length;
+
+		// If options changed (MP SDK repopulated), we need to reprocess
+		if (currentOptionsCount !== lastProcessedOptionsCount) return false;
+
+		if (shouldRestrict()) {
+			// For restricted mode: check it's locked to value "1" and disabled
+			return selectEl.value === '1' && selectEl.disabled === true;
+		} else if (msiStatus === 'all_msi' && allowedMonths && allowedMonths.length > 0) {
+			// For filter mode: check no disallowed options remain
+			var options = selectEl.querySelectorAll('option');
+			var hasDisallowed = false;
+			options.forEach(function(opt) {
+				var val = parseInt(opt.value, 10);
+				if (opt.value === '' || opt.value === '1') return;
+				if (!isNaN(val) && !allowedMonths.includes(val)) {
+					hasDisallowed = true;
+				}
+			});
+			return !hasDisallowed;
+		}
+
+		return true;
 	}
 
 	/**
@@ -102,6 +142,12 @@
 	function showMixedCartDisclaimer(selectEl) {
 		if (disclaimerShown) return;
 
+		// Check if disclaimer already exists in DOM (could survive partial reloads)
+		if (document.getElementById('ocellaris-msi-disclaimer')) {
+			disclaimerShown = true;
+			return;
+		}
+
 		var container = selectEl.closest('.mp-checkout-custom-installments-select-container') 
 			|| selectEl.parentElement;
 		
@@ -119,6 +165,7 @@
 
 	/**
 	 * Process the installments select element
+	 * This is the core function that gets called repeatedly by the polling interval
 	 */
 	function processInstallmentsSelect() {
 		var selectEl = document.getElementById('form-checkout__installments');
@@ -128,94 +175,63 @@
 		var realOptions = selectEl.querySelectorAll('option[value]:not([value=""])');
 		if (realOptions.length === 0) return;
 
+		// Skip if already correctly processed (avoid unnecessary DOM manipulation)
+		if (isAlreadyProcessed(selectEl)) return;
+
 		if (shouldRestrict()) {
 			lockInstallments(selectEl);
 		} else if (msiStatus === 'all_msi' && allowedMonths && allowedMonths.length > 0) {
 			// All products are MSI-eligible, but filter to only allowed months
 			filterInstallmentOptions(selectEl);
 		}
+
+		// Track what we processed so we can detect changes
+		lastProcessedSelect = selectEl;
+		lastProcessedOptionsCount = selectEl.querySelectorAll('option[value]:not([value=""])').length;
 	}
 
 	/**
-	 * Set up MutationObserver to watch for installments select changes
-	 * MercadoPago populates this select dynamically via its SDK
+	 * Reset state when checkout is fully reloaded
+	 * Called on WooCommerce events that indicate the checkout DOM was replaced
 	 */
-	function setupObserver() {
-		if (observerActive) return;
+	function resetState() {
+		disclaimerShown = false;
+		lastProcessedSelect = null;
+		lastProcessedOptionsCount = 0;
 
-		// Target: the entire MP checkout container
-		var target = document.getElementById('mp-checkout-custom-container') 
-			|| document.querySelector('.mp-checkout-container')
-			|| document.body;
-
-		var observer = new MutationObserver(function(mutations) {
-			mutations.forEach(function(mutation) {
-				// Check if installments select was added or its children changed
-				if (mutation.type === 'childList') {
-					var selectEl = document.getElementById('form-checkout__installments');
-					if (selectEl) {
-						var realOptions = selectEl.querySelectorAll('option[value]:not([value=""])');
-						if (realOptions.length > 0) {
-							// Small delay to ensure all options are loaded
-							setTimeout(processInstallmentsSelect, 100);
-						}
-					}
-				}
-			});
-		});
-
-		observer.observe(target, {
-			childList: true,
-			subtree: true
-		});
-
-		observerActive = true;
-
-		// Also observe the select itself once it exists
-		var checkSelect = setInterval(function() {
-			var selectEl = document.getElementById('form-checkout__installments');
-			if (selectEl) {
-				clearInterval(checkSelect);
-
-				// Observe option changes within the select
-				var selectObserver = new MutationObserver(function() {
-					var realOptions = selectEl.querySelectorAll('option[value]:not([value=""])');
-					if (realOptions.length > 0) {
-						setTimeout(processInstallmentsSelect, 150);
-					}
-				});
-
-				selectObserver.observe(selectEl, {
-					childList: true,
-					attributes: true
-				});
-			}
-		}, 500);
-
-		// Clean up the interval after 30 seconds as safety net
-		setTimeout(function() {
-			clearInterval(checkSelect);
-		}, 30000);
+		// Remove existing disclaimer (DOM may have been replaced so check again)
+		var existing = document.getElementById('ocellaris-msi-disclaimer');
+		if (existing) existing.remove();
 	}
 
 	/**
 	 * Initialize on checkout
+	 * Uses a polling interval (like the shipping filter) for resilience
+	 * against AJAX reloads from Envia.com or WooCommerce checkout updates.
 	 */
 	function init() {
-		// Set up the observer immediately
-		setupObserver();
-
-		// Also try processing directly in case the select already exists
+		// Try processing immediately
 		processInstallmentsSelect();
 
-		// Re-process after WooCommerce checkout updates (e.g., payment method switch)
-		$(document.body).on('updated_checkout payment_method_selected', function() {
-			disclaimerShown = false;
-			// Remove existing disclaimer
-			var existing = document.getElementById('ocellaris-msi-disclaimer');
-			if (existing) existing.remove();
+		// Set up aggressive polling interval — same pattern as shipping filter
+		// This ensures we catch the select even after full checkout DOM replacements
+		setInterval(function() {
+			processInstallmentsSelect();
+		}, 2000);
 
-			setTimeout(processInstallmentsSelect, 500);
+		// Also react immediately to WooCommerce checkout events for faster response
+		$(document.body).on('updated_checkout', function() {
+			resetState();
+			// Process with small delays to catch MP SDK re-rendering
+			setTimeout(processInstallmentsSelect, 300);
+			setTimeout(processInstallmentsSelect, 800);
+			setTimeout(processInstallmentsSelect, 1500);
+		});
+
+		$(document.body).on('payment_method_selected', function() {
+			resetState();
+			setTimeout(processInstallmentsSelect, 300);
+			setTimeout(processInstallmentsSelect, 800);
 		});
 	}
 

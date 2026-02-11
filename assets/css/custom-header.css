@@ -150,6 +150,26 @@ header .custom-logo-link img {
   position: relative;
 }
 
+.ocellaris-cart-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: #e53e3e;
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0 4px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 /* Sidebar Menu Overlay */
 .ocellaris-sidebar-overlay {
   position: fixed;

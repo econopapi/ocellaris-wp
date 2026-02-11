@@ -81,6 +81,18 @@ add_action('wp_enqueue_scripts', 'ocellaris_custom_header_assets');
 
 
 /**
+ * Cart Fragments: update cart count badge dynamically via AJAX
+ */
+function ocellaris_cart_count_fragment( $fragments ) {
+	$count = WC()->cart->get_cart_contents_count();
+	$style = $count === 0 ? ' style="display:none;"' : '';
+	$fragments['.ocellaris-cart-count'] = '<span class="ocellaris-cart-count"' . $style . '>' . esc_html( $count ) . '</span>';
+	return $fragments;
+}
+add_filter( 'woocommerce_add_to_cart_fragments', 'ocellaris_cart_count_fragment' );
+
+
+/**
  * Remove Astra Header
  */
 function ocellaris_remove_astra_header() {
@@ -653,6 +665,9 @@ function ocellaris_render_featured_products_block($attributes) {
 						$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
 					}
 				}
+
+				// Check MSI eligibility
+				$is_msi_eligible = ocellaris_is_product_msi_eligible( $product_id );
 				
 				$products_displayed++;
 			?>
@@ -669,6 +684,12 @@ function ocellaris_render_featured_products_block($attributes) {
 						<span class="brs-badge">Recomendación Ocellaris</span>
 					<?php endif; ?>
 				</div>
+
+				<?php if ($is_msi_eligible): ?>
+				<div class="featured-product-badge msi-badge-container <?php echo ($filter_type === 'sale' && $is_on_sale && $discount_percentage > 0) ? 'has-sale-badge' : (($filter_type !== 'sale') ? 'has-brs-badge' : ''); ?>">
+					<span class="msi-badge">Meses sin intereses</span>
+				</div>
+				<?php endif; ?>
 				
 				<!-- Imagen del producto -->
 				<div class="featured-product-image">
@@ -1638,22 +1659,8 @@ function ocellaris_checkout_shipping_filter_script() {
 }
 add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
 
-/**
- * BACKUP: Cargar script directamente en footer si estamos en checkout
- */
-function ocellaris_checkout_shipping_filter_footer() {
-	// Verificar si estamos en checkout
-	if (strpos($_SERVER['REQUEST_URI'], '/checkout') !== false) {
-		?>
-		<script>
-		console.log('🔥 DIRECT SCRIPT INJECTION!');
-		</script>
-		<script type="text/javascript" src="<?php echo get_stylesheet_directory_uri(); ?>/assets/js/checkout-shipping-filter.js?v=<?php echo time(); ?>"></script>
-		<?php
-	}
-}
-add_action( 'wp_footer', 'ocellaris_checkout_shipping_filter_footer' );
-add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_shipping_filter_script' );
+// Note: Backup footer injection removed — the wp_enqueue_scripts hook above
+// is sufficient. The duplicate add_action was also removed to prevent double-loading.
 
 /**
  * OCELLARIS PRODUCT CATALOG CUSTOMIZATIONS
@@ -1919,6 +1926,56 @@ function ocellaris_force_catalog_styles() {
 		display: block !important;
 		text-align: center !important;
 		width: 100% !important;
+	}
+
+	/* MSI badge styling */
+	body.woocommerce ul.products li.product .msi-badge-container,
+	body.woocommerce-page ul.products li.product .msi-badge-container,
+	.woocommerce ul.products li.product .msi-badge-container,
+	.woocommerce-page ul.products li.product .msi-badge-container {
+		position: absolute !important;
+		top: 12px !important;
+		left: 12px !important;
+		right: auto !important;
+		z-index: 10 !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge-container.has-sale-badge,
+	body.woocommerce-page ul.products li.product .msi-badge-container.has-sale-badge,
+	.woocommerce ul.products li.product .msi-badge-container.has-sale-badge,
+	.woocommerce-page ul.products li.product .msi-badge-container.has-sale-badge {
+		top: 12px !important;
+		left: 12px !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge,
+	body.woocommerce-page ul.products li.product .msi-badge,
+	.woocommerce ul.products li.product .msi-badge,
+	.woocommerce-page ul.products li.product .msi-badge {
+		background: var(--ocellaris-orange, #f15a22) !important;
+		color: white !important;
+		padding: 4px 8px !important;
+		border-radius: 14px !important;
+		font-size: 9px !important;
+		font-weight: bold !important;
+		text-transform: uppercase !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		gap: 3px !important;
+		box-shadow: 0 2px 8px rgba(241, 90, 34, 0.3) !important;
+		letter-spacing: 0.3px !important;
+		max-width: 100px !important;
+		line-height: 1.2 !important;
+		text-align: center !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge::before,
+	body.woocommerce-page ul.products li.product .msi-badge::before,
+	.woocommerce ul.products li.product .msi-badge::before,
+	.woocommerce-page ul.products li.product .msi-badge::before {
+		content: '💳' !important;
+		font-size: 11px !important;
+		flex-shrink: 0 !important;
 	}
 
 	/* Product content container */
@@ -2213,6 +2270,26 @@ add_action( 'woocommerce_before_shop_loop', 'ocellaris_force_3_columns', 5 );
 require_once get_stylesheet_directory() . '/includes/msi-promotions/admin-page.php';
 
 /**
+ * Check if a product is eligible for MSI (Meses Sin Intereses)
+ *
+ * @param int $product_id The product ID to check.
+ * @return bool True if the product is in the MSI whitelist and MSI is enabled.
+ */
+function ocellaris_is_product_msi_eligible( $product_id ) {
+	$enabled = get_option( 'ocellaris_msi_mp_enabled', '0' );
+	if ( $enabled !== '1' ) {
+		return false;
+	}
+
+	$msi_products = get_option( 'ocellaris_msi_mp_products', array() );
+	if ( ! is_array( $msi_products ) || empty( $msi_products ) ) {
+		return false;
+	}
+
+	return isset( $msi_products[ $product_id ] );
+}
+
+/**
  * Enqueue MSI checkout control scripts and styles
  * Only loads on the checkout page when the feature is enabled
  */
@@ -2350,3 +2427,38 @@ function ocellaris_msi_analyze_cart( $msi_products ) {
 /**
  * END OF OCELLARIS MSI PROMOTIONS MODULE
  */
+
+/**
+ * CHECKOUT FIELD LABELS
+ * Personalizar labels de campos en el checkout de WooCommerce.
+ */
+function ocellaris_custom_checkout_field_labels( $fields ) {
+	// "Localidad / Ciudad" → "Alcaldía/Municipio"
+	if ( isset( $fields['city']['label'] ) ) {
+		$fields['city']['label'] = 'Alcaldía/Municipio';
+	}
+	// "Región / Estado" → "Estado"
+	if ( isset( $fields['state']['label'] ) ) {
+		$fields['state']['label'] = 'Estado';
+	}
+	return $fields;
+}
+add_filter( 'woocommerce_default_address_fields', 'ocellaris_custom_checkout_field_labels' );
+
+/**
+ * CHECKOUT FIELD PERSISTENCE
+ * Guarda los campos del checkout en localStorage para restaurarlos
+ * cuando el usuario regrese (carrito abandonado, recarga, etc.).
+ */
+function ocellaris_checkout_persistence_assets() {
+	if ( ! is_checkout() ) return;
+
+	wp_enqueue_script(
+		'ocellaris-checkout-persistence',
+		get_stylesheet_directory_uri() . '/assets/js/checkout-field-persistence.js',
+		array( 'jquery' ),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_persistence_assets' );

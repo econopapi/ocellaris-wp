@@ -31,6 +31,9 @@ if ( $is_on_sale ) {
 	}
 }
 
+// Check MSI eligibility
+$is_msi_eligible = function_exists( 'ocellaris_is_product_msi_eligible' ) && ocellaris_is_product_msi_eligible( $product->get_id() );
+
 ?>
 <li <?php wc_product_class( 'featured-product-item ocellaris-catalog-product', $product ); ?>>
 	
@@ -45,6 +48,12 @@ if ( $is_on_sale ) {
 					<span class="save-text">DESCUENTO</span>
 					<span class="discount-percent"><?php echo $discount_percentage; ?>%</span>
 				</span>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $is_msi_eligible ) : ?>
+			<div class="featured-product-badge msi-badge-container <?php echo ( $is_on_sale && $discount_percentage > 0 ) ? 'has-sale-badge' : ''; ?>">
+				<span class="msi-badge">Meses sin intereses</span>
 			</div>
 		<?php endif; ?>
 	</div>
