@@ -665,6 +665,9 @@ function ocellaris_render_featured_products_block($attributes) {
 						$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
 					}
 				}
+
+				// Check MSI eligibility
+				$is_msi_eligible = ocellaris_is_product_msi_eligible( $product_id );
 				
 				$products_displayed++;
 			?>
@@ -681,6 +684,12 @@ function ocellaris_render_featured_products_block($attributes) {
 						<span class="brs-badge">Recomendación Ocellaris</span>
 					<?php endif; ?>
 				</div>
+
+				<?php if ($is_msi_eligible): ?>
+				<div class="featured-product-badge msi-badge-container <?php echo ($filter_type === 'sale' && $is_on_sale && $discount_percentage > 0) ? 'has-sale-badge' : (($filter_type !== 'sale') ? 'has-brs-badge' : ''); ?>">
+					<span class="msi-badge">Meses sin intereses</span>
+				</div>
+				<?php endif; ?>
 				
 				<!-- Imagen del producto -->
 				<div class="featured-product-image">
@@ -1919,6 +1928,56 @@ function ocellaris_force_catalog_styles() {
 		width: 100% !important;
 	}
 
+	/* MSI badge styling */
+	body.woocommerce ul.products li.product .msi-badge-container,
+	body.woocommerce-page ul.products li.product .msi-badge-container,
+	.woocommerce ul.products li.product .msi-badge-container,
+	.woocommerce-page ul.products li.product .msi-badge-container {
+		position: absolute !important;
+		top: 12px !important;
+		left: 12px !important;
+		right: auto !important;
+		z-index: 10 !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge-container.has-sale-badge,
+	body.woocommerce-page ul.products li.product .msi-badge-container.has-sale-badge,
+	.woocommerce ul.products li.product .msi-badge-container.has-sale-badge,
+	.woocommerce-page ul.products li.product .msi-badge-container.has-sale-badge {
+		top: 12px !important;
+		left: 12px !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge,
+	body.woocommerce-page ul.products li.product .msi-badge,
+	.woocommerce ul.products li.product .msi-badge,
+	.woocommerce-page ul.products li.product .msi-badge {
+		background: var(--ocellaris-orange, #f15a22) !important;
+		color: white !important;
+		padding: 4px 8px !important;
+		border-radius: 14px !important;
+		font-size: 9px !important;
+		font-weight: bold !important;
+		text-transform: uppercase !important;
+		display: inline-flex !important;
+		align-items: center !important;
+		gap: 3px !important;
+		box-shadow: 0 2px 8px rgba(241, 90, 34, 0.3) !important;
+		letter-spacing: 0.3px !important;
+		max-width: 100px !important;
+		line-height: 1.2 !important;
+		text-align: center !important;
+	}
+
+	body.woocommerce ul.products li.product .msi-badge::before,
+	body.woocommerce-page ul.products li.product .msi-badge::before,
+	.woocommerce ul.products li.product .msi-badge::before,
+	.woocommerce-page ul.products li.product .msi-badge::before {
+		content: '💳' !important;
+		font-size: 11px !important;
+		flex-shrink: 0 !important;
+	}
+
 	/* Product content container */
 	body.woocommerce ul.products li.product .featured-product-content,
 	body.woocommerce-page ul.products li.product .featured-product-content,
@@ -2209,6 +2268,26 @@ add_action( 'woocommerce_before_shop_loop', 'ocellaris_force_3_columns', 5 );
 
 // Include admin page
 require_once get_stylesheet_directory() . '/includes/msi-promotions/admin-page.php';
+
+/**
+ * Check if a product is eligible for MSI (Meses Sin Intereses)
+ *
+ * @param int $product_id The product ID to check.
+ * @return bool True if the product is in the MSI whitelist and MSI is enabled.
+ */
+function ocellaris_is_product_msi_eligible( $product_id ) {
+	$enabled = get_option( 'ocellaris_msi_mp_enabled', '0' );
+	if ( $enabled !== '1' ) {
+		return false;
+	}
+
+	$msi_products = get_option( 'ocellaris_msi_mp_products', array() );
+	if ( ! is_array( $msi_products ) || empty( $msi_products ) ) {
+		return false;
+	}
+
+	return isset( $msi_products[ $product_id ] );
+}
 
 /**
  * Enqueue MSI checkout control scripts and styles
