@@ -10,44 +10,73 @@ get_header(); ?>
 <div id="primary" class="content-area">
 	<main id="main" class="site-main">
 
-		<?php if ( have_posts() ) : ?>
+		<?php
+		// Get search query early so we can use it for all searches
+		$search_query = get_search_query();
+		?>
 
-			<header class="page-header">
-				<h1 class="page-title">
-					<?php
-					/* translators: %s: search query. */
-					printf( esc_html__( 'Resultados de búsqueda para: %s', 'ocellaris-custom-astra' ), '<span>' . get_search_query() . '</span>' );
-					?>
-				</h1>
-			</header><!-- .page-header -->
+		<header class="page-header">
+			<h1 class="page-title">
+				<?php
+				/* translators: %s: search query. */
+				printf( esc_html__( 'Resultados de búsqueda para: %s', 'ocellaris-custom-astra' ), '<span>' . $search_query . '</span>' );
+				?>
+			</h1>
+		</header><!-- .page-header -->
 
-			<?php
-			// Get search query
-			$search_query = get_search_query();
+		<?php
 
-			// First, search for products with simplified query
-			$product_args = array(
-				'post_type'      => 'product',
-				's'              => $search_query,
-				'post_status'    => 'publish',
-				'posts_per_page' => 12,
-			);
-
-			$product_query = new WP_Query( $product_args );
-			
-			// Get total count of products for this search
-			$total_product_args = array(
+			// --- Search products by TEXT (title/content) ---
+			$text_search_args = array(
 				'post_type'      => 'product',
 				's'              => $search_query,
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
 				'fields'         => 'ids',
 			);
-			$total_products = new WP_Query( $total_product_args );
-			$total_count = $total_products->found_posts;
+			$text_query = new WP_Query( $text_search_args );
+			$text_product_ids = $text_query->posts;
 			wp_reset_postdata();
 
-			if ( $product_query->have_posts() ) : ?>
+			// --- Search products by SKU (meta field) ---
+			$sku_search_args = array(
+				'post_type'      => 'product',
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				'fields'         => 'ids',
+				'meta_query'     => array(
+					array(
+						'key'     => '_sku',
+						'value'   => $search_query,
+						'compare' => 'LIKE',
+					),
+				),
+			);
+			$sku_query = new WP_Query( $sku_search_args );
+			$sku_product_ids = $sku_query->posts;
+			wp_reset_postdata();
+
+			// --- Combine and deduplicate: SKU matches first, then text matches ---
+			$all_product_ids = array_unique( array_merge( $sku_product_ids, $text_product_ids ) );
+			$total_count = count( $all_product_ids );
+
+			// Get the first 12 products for display
+			$display_ids = array_slice( $all_product_ids, 0, 12 );
+
+			if ( ! empty( $display_ids ) ) {
+				$product_args = array(
+					'post_type'      => 'product',
+					'post__in'       => $display_ids,
+					'post_status'    => 'publish',
+					'posts_per_page' => 12,
+					'orderby'        => 'post__in',
+				);
+				$product_query = new WP_Query( $product_args );
+			} else {
+				$product_query = new WP_Query( array( 'post__in' => array( 0 ) ) ); // Empty result set
+			}
+
+			if ( ! empty( $display_ids ) && $product_query->have_posts() ) : ?>
 				<section class="search-products-section">
 					<div class="search-section-header">
 						<h2 class="search-section-title">Productos</h2>
@@ -158,7 +187,7 @@ get_header(); ?>
 			<?php endif;
 
 			// If no results found
-			if ( ! $product_query->have_posts() && ! $post_query->have_posts() ) : ?>
+			if ( empty( $all_product_ids ) && ! $post_query->have_posts() ) : ?>
 				<section class="no-results not-found">
 					<header class="page-header">
 						<h1 class="page-title"><?php esc_html_e( 'Nada por aquí', 'ocellaris-custom-astra' ); ?></h1>
@@ -170,21 +199,6 @@ get_header(); ?>
 					</div><!-- .page-content -->
 				</section><!-- .no-results -->
 			<?php endif; ?>
-
-		<?php else : ?>
-			
-			<section class="no-results not-found">
-				<header class="page-header">
-					<h1 class="page-title"><?php esc_html_e( 'Nada por aquí', 'ocellaris-custom-astra' ); ?></h1>
-				</header><!-- .page-header -->
-
-				<div class="page-content">
-					<p><?php esc_html_e( 'Lo siento, pero nada coincide con tus términos de búsqueda. Por favor, intenta de nuevo con algunas palabras clave diferentes.', 'ocellaris-custom-astra' ); ?></p>
-					
-				</div><!-- .page-content -->
-			</section><!-- .no-results -->
-
-		<?php endif; ?>
 
 	</main><!-- #main -->
 </div><!-- #primary -->
