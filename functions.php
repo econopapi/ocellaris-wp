@@ -2427,3 +2427,38 @@ function ocellaris_msi_analyze_cart( $msi_products ) {
 /**
  * END OF OCELLARIS MSI PROMOTIONS MODULE
  */
+
+/**
+ * CHECKOUT FIELD LABELS
+ * Personalizar labels de campos en el checkout de WooCommerce.
+ */
+function ocellaris_custom_checkout_field_labels( $fields ) {
+	// "Localidad / Ciudad" → "Alcaldía/Municipio"
+	if ( isset( $fields['city']['label'] ) ) {
+		$fields['city']['label'] = 'Alcaldía/Municipio';
+	}
+	// "Región / Estado" → "Estado"
+	if ( isset( $fields['state']['label'] ) ) {
+		$fields['state']['label'] = 'Estado';
+	}
+	return $fields;
+}
+add_filter( 'woocommerce_default_address_fields', 'ocellaris_custom_checkout_field_labels' );
+
+/**
+ * CHECKOUT FIELD PERSISTENCE
+ * Guarda los campos del checkout en localStorage para restaurarlos
+ * cuando el usuario regrese (carrito abandonado, recarga, etc.).
+ */
+function ocellaris_checkout_persistence_assets() {
+	if ( ! is_checkout() ) return;
+
+	wp_enqueue_script(
+		'ocellaris-checkout-persistence',
+		get_stylesheet_directory_uri() . '/assets/js/checkout-field-persistence.js',
+		array( 'jquery' ),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+}
+add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_persistence_assets' );
