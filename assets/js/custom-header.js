@@ -13,6 +13,132 @@
         const submenuClose = $('.submenu-sidebar-close');
         const submenuPanel = $('.ocellaris-submenu-panel');
         const submenuContent = $('.submenu-panel-content');
+        const searchWrap = $('.ocellaris-search');
+        const searchForm = $('.ocellaris-search .search-form');
+        const searchField = searchForm.find('.search-field');
+        const searchClear = searchForm.find('.search-clear');
+        const searchSubmit = searchForm.find('.search-submit');
+
+        function isMobileSearch() {
+            return window.matchMedia('(max-width: 768px)').matches;
+        }
+
+        function openMobileSearch() {
+            if (!isMobileSearch() || !searchWrap.length) {
+                return;
+            }
+
+            searchWrap.addClass('is-expanded');
+
+            setTimeout(function() {
+                if (searchField.length) {
+                    searchField.trigger('focus');
+                }
+            }, 30);
+        }
+
+        function updateSearchClearState() {
+            if (!searchClear.length || !searchField.length) {
+                return;
+            }
+
+            const hasValue = $.trim(searchField.val()).length > 0;
+            searchClear.prop('hidden', !hasValue);
+        }
+
+        function closeMobileSearch() {
+            if (!searchWrap.length) {
+                return;
+            }
+
+            if ($.trim(searchField.val()).length > 0) {
+                return;
+            }
+
+            searchWrap.removeClass('is-expanded');
+        }
+
+        updateSearchClearState();
+
+        searchField.on('input change', function() {
+            updateSearchClearState();
+        });
+
+        searchClear.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            searchField.val('');
+            updateSearchClearState();
+            searchField.trigger('focus');
+            if (isMobileSearch()) {
+                closeMobileSearch();
+            }
+        });
+
+        // Mobile UX: first tap expands and focuses input; submit only with text.
+        searchSubmit.on('click', function(e) {
+            if (!isMobileSearch()) {
+                return;
+            }
+
+            if (!searchWrap.hasClass('is-expanded')) {
+                e.preventDefault();
+                openMobileSearch();
+                return;
+            }
+
+            const hasValue = $.trim(searchField.val()).length > 0;
+            const isFocused = document.activeElement === searchField.get(0);
+
+            if (!hasValue || !isFocused) {
+                e.preventDefault();
+                searchField.trigger('focus');
+            }
+        });
+
+        // Tapping the hidden/compact field area expands on mobile.
+        searchField.on('focus touchstart', function() {
+            if (isMobileSearch() && !searchWrap.hasClass('is-expanded')) {
+                openMobileSearch();
+            }
+        });
+
+        // Prevent empty submits on mobile and keep focus in input.
+        searchForm.on('submit', function(e) {
+            if (!isMobileSearch()) {
+                return;
+            }
+
+            if ($.trim(searchField.val()).length === 0) {
+                e.preventDefault();
+                searchField.trigger('focus');
+            }
+
+            updateSearchClearState();
+        });
+
+        // Close compact search when tapping outside and no query exists.
+        $(document).on('click touchstart', function(e) {
+            if (!isMobileSearch()) {
+                return;
+            }
+
+            if (!$(e.target).closest('.ocellaris-search').length) {
+                closeMobileSearch();
+            }
+        });
+
+        // Keep state consistent when returning to desktop widths.
+        $(window).on('resize', function() {
+            if (!isMobileSearch()) {
+                searchWrap.removeClass('is-expanded');
+                return;
+            }
+
+            if ($.trim(searchField.val()).length > 0) {
+                searchWrap.addClass('is-expanded');
+            }
+        });
 
         // Open sidebar
         menuToggle.on('click', function() {
