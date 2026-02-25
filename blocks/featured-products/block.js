@@ -83,6 +83,7 @@
 
       function loadProducts() {
         setIsLoading(true);
+        setProducts([]);
         var allProducts = [];
         var page = 1;
         var perPage = 100;
@@ -103,25 +104,44 @@
         function fetchPage(pageNum) {
           // Clonar params para evitar mutaciones entre llamadas
           var pageParams = Object.assign({}, params, { page: pageNum });
+
+          // Intentar primero con la API REST de WooCommerce (requiere permisos)
           return apiFetch({
             path: wp.url.addQueryArgs('/wc/v3/products', pageParams)
+          }).catch(function (error) {
+            // Fallback a la Store API pública cuando la v3 no está disponible (p.ej. usuarios sin permisos)
+            console.warn('Falling back to Store API for products:', error);
+            var storeParams = Object.assign({}, pageParams);
+            delete storeParams.status; // La Store API no acepta "status"
+            return apiFetch({
+              path: wp.url.addQueryArgs('/wc/store/v1/products', storeParams)
+            });
           });
         }
 
         function fetchAllProducts() {
-          fetchPage(page).then(function (data) {
-            allProducts = allProducts.concat(data);
-            if (data.length === perPage) {
-              page++;
-              fetchAllProducts();
-            } else {
-              setProducts(allProducts);
+          fetchPage(page)
+            .then(function (data) {
+              // Respuesta inesperada: detener carga para no dejar spinner infinito
+              if (!Array.isArray(data)) {
+                throw new Error('Unexpected products response');
+              }
+
+              allProducts = allProducts.concat(data);
+
+              if (data.length === perPage) {
+                page++;
+                fetchAllProducts();
+              } else {
+                setProducts(allProducts);
+              }
+            })
+            .catch(function (error) {
+              console.error('Error loading products:', error);
+            })
+            .finally(function () {
               setIsLoading(false);
-            }
-          }).catch(function (error) {
-            console.error('Error loading products:', error);
-            setIsLoading(false);
-          });
+            });
         }
 
         fetchAllProducts();
@@ -133,7 +153,15 @@
         }).then(function (data) {
           setTags(data);
         }).catch(function (error) {
-          console.error('Error loading tags:', error);
+          // Reintentar con la Store API si la v3 falla (roles sin permisos)
+          console.warn('Falling back to Store API for tags:', error);
+          apiFetch({
+            path: '/wc/store/v1/products/tags?per_page=100'
+          }).then(function (data) {
+            setTags(data);
+          }).catch(function (fallbackError) {
+            console.error('Error loading tags:', fallbackError);
+          });
         });
       }
 
@@ -196,6 +224,20 @@
         displayProducts = filteredProducts.slice(0, attributes.productsToShow);
       }
 
+      // Skeletons para feedback de carga en la selección manual
+      var skeletonItems = Array.from({ length: 6 }).map(function (_, idx) {
+        return el('div', {
+          key: 'skeleton-' + idx,
+          className: 'product-item skeleton'
+        }, [
+          el('div', { className: 'skeleton-thumb' }),
+          el('div', { className: 'skeleton-lines' }, [
+            el('div', { className: 'line short' }),
+            el('div', { className: 'line long' })
+          ])
+        ]);
+      });
+
       return el('div', { className: 'ocellaris-featured-products-editor' }, [
         el(InspectorControls, {}, [
           el(PanelBody, { title: 'Configuración General', initialOpen: true }, [
@@ -247,31 +289,38 @@
             // Selección manual de productos
             attributes.filterType === 'manual' && el('div', {}, [
               el('h4', {}, 'Seleccionar Productos'),
+              isLoading && el('p', { className: 'loading-hint' }, 'Cargando productos, esto puede tardar unos segundos...'),
               el(TextControl, {
                 label: 'Buscar productos',
                 value: searchTerm,
                 onChange: setSearchTerm,
-                placeholder: 'Escribe para buscar...'
+                placeholder: 'Escribe para buscar...',
+                disabled: isLoading
               }),
               el('div', { className: 'products-grid' }, 
-                filteredProducts.map(function(product) {
-                  var isSelected = attributes.selectedProducts.includes(product.id);
-                  return el('div', {
-                    key: product.id,
-                    className: 'product-item ' + (isSelected ? 'selected' : ''),
-                    onClick: function() { toggleProductSelection(product.id); }
-                  }, [
-                    product.images[0] && el('img', {
-                      src: product.images[0].src,
-                      alt: product.name,
-                      style: { width: '50px', height: '50px', objectFit: 'cover' }
-                    }),
-                    el('div', {}, [
-                      el('strong', {}, product.name),
-                      el('div', {}, '$' + product.price)
-                    ])
-                  ]);
-                })
+                isLoading
+                  ? skeletonItems
+                  : (filteredProducts.length === 0
+                    ? [el('p', { className: 'empty-hint' }, 'No hay productos disponibles. Intenta otra búsqueda.')]
+                    : filteredProducts.map(function(product) {
+                        var isSelected = attributes.selectedProducts.includes(product.id);
+                        return el('div', {
+                          key: product.id,
+                          className: 'product-item ' + (isSelected ? 'selected' : ''),
+                          onClick: function() { toggleProductSelection(product.id); }
+                        }, [
+                          product.images[0] && el('img', {
+                            src: product.images[0].src,
+                            alt: product.name,
+                            style: { width: '50px', height: '50px', objectFit: 'cover' }
+                          }),
+                          el('div', {}, [
+                            el('strong', {}, product.name),
+                            el('div', {}, '$' + product.price)
+                          ])
+                        ]);
+                      })
+                  )
               )
             ]),
 
