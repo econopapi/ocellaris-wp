@@ -446,6 +446,27 @@ header .custom-logo-link img {
   color: #374151;
 }
 
+.submenu-view-all {
+  margin: 0 0 1rem 0;
+}
+
+.submenu-view-all a {
+  display: block;
+  padding: 0.45rem 0.65rem;
+  background: #f0f7ff;
+  color: var(--ocellaris-blue);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.submenu-view-all a:hover {
+  background: #e3f0ff;
+  color: #1d4f9c;
+}
+
 .submenu-panel-content ul {
   list-style: none;
   margin: 0;

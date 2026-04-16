@@ -19,6 +19,21 @@
         const searchClear = searchForm.find('.search-clear');
         const searchSubmit = searchForm.find('.search-submit');
 
+        function escapeHtml(value) {
+            return $('<div>').text(value == null ? '' : String(value)).html();
+        }
+
+        function buildViewAllLink(title, href) {
+            if (!href) {
+                return '';
+            }
+
+            const safeTitle = escapeHtml((title || '').trim());
+            const safeHref = escapeHtml(href);
+
+            return '<div class="submenu-view-all"><a href="' + safeHref + '">Ver todo de ' + safeTitle + '</a></div>';
+        }
+
         function isMobileSearch() {
             return window.matchMedia('(max-width: 768px)').matches;
         }
@@ -215,6 +230,7 @@
 
                 // Construir panel con hijos
                 let html = '<h4>' + title + '</h4>';
+                html += buildViewAllLink(title, href);
                 $children.each(function() {
                     const $child = $(this);
                     const $a = $child.children('a');
@@ -274,6 +290,7 @@
 
                 // Construir y abrir el panel
                 let out = '<h4>' + (data.title || title) + '</h4>';
+                out += buildViewAllLink(data.title || title, href);
                 groups.forEach(function(group) {
                     const hasGroupTitle = group.title && group.title.length;
                     out += '<div class="submenu-group">';
