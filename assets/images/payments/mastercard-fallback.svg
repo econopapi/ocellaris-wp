@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title desc">
+  <title id="title">Mastercard Placeholder</title>
+  <desc id="desc">Replace this file with official Mastercard logo SVG.</desc>
+  <rect width="220" height="80" rx="8" fill="#ffffff" stroke="#d0d8e8"/>
+  <circle cx="95" cy="40" r="22" fill="#eb001b"/>
+  <circle cx="125" cy="40" r="22" fill="#f79e1b" fill-opacity="0.9"/>
+  <text x="110" y="73" text-anchor="middle" font-size="14" font-family="Arial, sans-serif" font-weight="700" fill="#222">MASTERCARD</text>
+</svg>

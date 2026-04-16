@@ -258,6 +258,63 @@
   padding-left: 5px;
 }
 
+.footer-payment-methods {
+  margin-top: 26px;
+}
+
+.footer-payment-methods h5 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.payment-badges {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.payment-badge {
+  min-height: 54px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #dbe3f0;
+}
+
+.payment-badge img {
+  width: 100%;
+  max-width: 118px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.payment-placeholder {
+  width: 100%;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px dashed #7a8aa0;
+  color: #dbe8ff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  line-height: 1;
+}
+
 /* Footer Bottom */
 .footer-bottom {
   background: #020617;
@@ -353,6 +410,10 @@
   .footer-contact {
     padding-right: 0;
   }
+
+  .footer-payment-methods {
+    max-width: 420px;
+  }
   
   .footer-bottom-container {
     flex-direction: column;
@@ -376,5 +437,19 @@
   
   .social-links {
     justify-content: center;
+  }
+
+  .payment-badges {
+    gap: 8px;
+  }
+
+  .payment-badge {
+    min-height: 50px;
+    padding: 6px;
+  }
+
+  .payment-badge img,
+  .payment-placeholder {
+    height: 34px;
   }
 }

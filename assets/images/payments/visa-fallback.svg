@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title desc">
+  <title id="title">Visa Placeholder</title>
+  <desc id="desc">Replace this file with official Visa logo SVG.</desc>
+  <rect width="220" height="80" rx="8" fill="#ffffff" stroke="#d0d8e8"/>
+  <text x="110" y="48" text-anchor="middle" font-size="24" font-family="Arial, sans-serif" font-weight="700" fill="#1434cb">VISA</text>
+</svg>

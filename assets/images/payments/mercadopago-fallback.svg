@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-labelledby="title desc">
+  <title id="title">Mercado Pago Placeholder</title>
+  <desc id="desc">Replace this file with official Mercado Pago logo SVG.</desc>
+  <rect width="220" height="80" rx="8" fill="#ffffff" stroke="#d0d8e8"/>
+  <ellipse cx="65" cy="40" rx="35" ry="20" fill="#3fa9f5"/>
+  <text x="150" y="46" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" font-weight="700" fill="#12339a">mercado pago</text>
+</svg>
