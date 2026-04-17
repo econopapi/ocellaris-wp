@@ -383,11 +383,12 @@ header .custom-logo-link img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.4rem 1.5rem;
+  padding: 0.45rem 3.35rem 0.45rem 1.5rem;
   color: #374151;
   text-decoration: none;
   font-size: 0.9375rem;
   transition: all 0.2s;
+  position: relative;
 }
 
 .sidebar-menu-list .menu-item a:hover {
@@ -404,10 +405,33 @@ header .custom-logo-link img {
 .sidebar-menu-list .menu-item a svg {
   flex-shrink: 0;
   transition: transform 0.2s;
+  display: none;
 }
 
-.sidebar-menu-list .menu-item.active a svg {
-  transform: rotate(90deg);
+.sidebar-menu-list .menu-item.menu-item-has-children > a::after,
+.sidebar-menu-list .menu-item > a[data-cat-id]::after {
+  content: '\203a';
+  position: absolute;
+  top: 1px;
+  right: 0;
+  width: 2.75rem;
+  height: calc(100% - 2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.55rem;
+  font-weight: 500;
+  color: #6b7280;
+  background: #f1f1f1;
+  border-left: 1px solid #e5e7eb;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-menu-list .menu-item.menu-item-has-children > a:hover::after,
+.sidebar-menu-list .menu-item > a[data-cat-id]:hover::after,
+.sidebar-menu-list .menu-item.active > a::after {
+  background: #e3e8ef;
+  color: #374151;
 }
 
 /* Panel de submenú (aparece a la derecha) */
@@ -596,6 +620,16 @@ header .custom-logo-link img {
 
   .sidebar-main-categories {
     max-height: calc(100vh - 330px);
+  }
+
+  .sidebar-menu-list .menu-item a {
+    padding-right: 3.1rem;
+  }
+
+  .sidebar-menu-list .menu-item.menu-item-has-children > a::after,
+  .sidebar-menu-list .menu-item > a[data-cat-id]::after {
+    width: 2.5rem;
+    font-size: 1.35rem;
   }
 
   .ocellaris-submenu-panel {

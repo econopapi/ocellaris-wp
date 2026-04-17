@@ -146,6 +146,33 @@
                     <?php
                 }
                 ?>
+
+                <div class="footer-payment-methods" aria-label="Metodos de pago aceptados">
+                    <h5>Metodos de pago</h5>
+                    <ul class="payment-badges" role="list">
+                        <?php
+                        $payment_methods = array(
+                            'visa' => 'Visa',
+                            'mastercard' => 'Mastercard',
+                            'amex' => 'American Express',
+                            'mercadopago' => 'Mercado Pago',
+                        );
+
+                        foreach ( $payment_methods as $slug => $label ) :
+                            $svg_relative_path = '/assets/images/payments/' . $slug . '.svg';
+                            $svg_absolute_path = get_stylesheet_directory() . $svg_relative_path;
+                            $svg_url = get_stylesheet_directory_uri() . $svg_relative_path;
+                            ?>
+                            <li class="payment-badge payment-<?php echo esc_attr( $slug ); ?>" aria-label="<?php echo esc_attr( $label ); ?>">
+                                <?php if ( file_exists( $svg_absolute_path ) ) : ?>
+                                    <img src="<?php echo esc_url( $svg_url ); ?>" alt="<?php echo esc_attr( $label ); ?>" loading="lazy" decoding="async" />
+                                <?php else : ?>
+                                    <span class="payment-placeholder"><?php echo esc_html( strtoupper( $label ) ); ?></span>
+                                <?php endif; ?>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
