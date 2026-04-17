@@ -50,20 +50,27 @@ add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
  * Custom Header scripts and styles
  */
 function ocellaris_custom_header_assets() {
+	$header_css_rel = '/assets/css/custom-header.css';
+	$header_js_rel  = '/assets/js/custom-header.js';
+	$header_css_abs = get_stylesheet_directory() . $header_css_rel;
+	$header_js_abs  = get_stylesheet_directory() . $header_js_rel;
+	$header_css_ver = file_exists( $header_css_abs ) ? filemtime( $header_css_abs ) : CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION;
+	$header_js_ver  = file_exists( $header_js_abs ) ? filemtime( $header_js_abs ) : CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION;
+
 	// custom header CSS
 	wp_enqueue_style(
 		'ocellaris-header-css',
-		get_stylesheet_directory_uri() . '/assets/css/custom-header.css',
+		get_stylesheet_directory_uri() . $header_css_rel,
 		array(),
-		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
+		$header_css_ver
 	);
 
 	//custom header JS
 	wp_enqueue_script(
 		'ocellaris-header-js',
-		get_stylesheet_directory_uri() . '/assets/js/custom-header.js',
+		get_stylesheet_directory_uri() . $header_js_rel,
 		array('jquery'),
-		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		$header_js_ver,
 		true
 	);
 

@@ -34,6 +34,50 @@
             return '<div class="submenu-view-all"><a href="' + safeHref + '">Ver todo de ' + safeTitle + '</a></div>';
         }
 
+        function enhanceQuickLinkEmojis() {
+            $('.sidebar-quick-links .quick-links-list a').each(function() {
+                const link = this;
+                const $link = $(link);
+
+                if ($link.find('.quick-link-emoji').length) {
+                    return;
+                }
+
+                const firstNode = link.firstChild;
+                if (!firstNode || firstNode.nodeType !== Node.TEXT_NODE) {
+                    return;
+                }
+
+                const rawText = firstNode.nodeValue || '';
+                const trimmedText = rawText.replace(/^\s+/, '');
+                const leadingWhitespace = rawText.slice(0, rawText.length - trimmedText.length);
+                const firstSpace = trimmedText.indexOf(' ');
+
+                if (firstSpace <= 0) {
+                    return;
+                }
+
+                const emoji = trimmedText.slice(0, firstSpace);
+                const remainingText = trimmedText.slice(firstSpace + 1);
+
+                // Only wrap non-ASCII leading tokens (quick emoji heuristic).
+                if (!/[^\u0000-\u007F]/.test(emoji)) {
+                    return;
+                }
+
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = 'quick-link-emoji';
+                emojiSpan.textContent = emoji;
+
+                const beforeText = document.createTextNode(leadingWhitespace);
+                const afterText = document.createTextNode(' ' + remainingText);
+
+                link.replaceChild(afterText, firstNode);
+                link.insertBefore(emojiSpan, afterText);
+                link.insertBefore(beforeText, emojiSpan);
+            });
+        }
+
         function isMobileSearch() {
             return window.matchMedia('(max-width: 768px)').matches;
         }
@@ -72,6 +116,8 @@
 
             searchWrap.removeClass('is-expanded');
         }
+
+        enhanceQuickLinkEmojis();
 
         updateSearchClearState();
 
