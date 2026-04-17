@@ -181,7 +181,7 @@ Crea menús en **Apariencia > Menús** y asígnalos a las ubicaciones del footer
 
 ```css
 :root {
-  --ocellaris-blue: #4592eb;       /* Azul principal */
+  --ocellaris-blue: #1790fa;       /* Azul principal */
   --ocellaris-deep-blue: #003866;  /* Azul oscuro */
   --ocellaris-orange: #f15a22;     /* Naranja/acento */
 }

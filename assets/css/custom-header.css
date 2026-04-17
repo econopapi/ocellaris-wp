@@ -23,6 +23,36 @@ header .custom-logo-link img {
   margin: 0 auto;
 }
 
+.sidebar-quick-links .quick-links-list a,
+#menu-ocellaris-quick-links a {
+  text-shadow: none;
+}
+
+.sidebar-quick-links .quick-links-list a::first-letter,
+#menu-ocellaris-quick-links a::first-letter {
+  text-shadow: none;
+  filter: none;
+  -webkit-text-stroke: 0;
+}
+
+.sidebar-quick-links .quick-link-emoji,
+#menu-ocellaris-quick-links .quick-link-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex-shrink: 0;
+  line-height: 1;
+  border-radius: 9999px;
+  background: rgba(33, 33, 33, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  text-shadow: none;
+  filter: none;
+  -webkit-text-stroke: 0;
+}
+
 /* Menu Toggle Button */
 .ocellaris-menu-toggle {
   display: flex;
@@ -324,7 +354,7 @@ header .custom-logo-link img {
 /* Columna izquierda - Quick Links */
 .sidebar-quick-links {
   width: 240px;
-  background: #4A90E2;
+  background: #1790fa;
   padding: 1rem 0;
   flex-shrink: 0;
   overflow-y: auto;
