@@ -119,6 +119,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Se añadieron flechas laterales en el menú de categorías para reforzar la indicación de contenido adicional.
 - Se ajustó el bloque Featured Brands reduciendo padding y aumentando el tamaño visible de los logos.
 - Se ajustó el bloque Featured Products (`blocks/featured-products/style.css`) para reducir espacios entre tarjetas y optimizar altura de imagen en desktop y mobile.
+- Se ajustó el bloque Product Categories (`blocks/product-categories/style.css`) para que las imágenes sobresalgan del contenedor circular, manteniendo comportamiento responsive en desktop y mobile.
 
 ## Bloques de Gutenberg
 
