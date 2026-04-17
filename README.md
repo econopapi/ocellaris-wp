@@ -83,6 +83,7 @@ ocellaris-astra/
 - Botón de acceso/cuenta de usuario
 - Icono de carrito de WooCommerce
 - Menú lateral (sidebar) con animación slide-in
+- Indicadores visuales tipo flecha para entradas con más contenido en categorías
 - Carga dinámica de subcategorías vía AJAX
 
 ### Footer Personalizado
@@ -90,7 +91,16 @@ ocellaris-astra/
 - Información de contacto (teléfono, email, dirección)
 - Enlaces a redes sociales (Facebook, YouTube, Instagram, TikTok)
 - Columnas configurables mediante menús de WordPress
+- Badges de métodos de pago aceptados (Visa, Mastercard, American Express, Mercado Pago)
 - Sección de copyright y enlaces legales
+
+Los íconos SVG de pago se cargan desde:
+- `assets/images/payments/visa.svg`
+- `assets/images/payments/mastercard.svg`
+- `assets/images/payments/amex.svg`
+- `assets/images/payments/mercadopago.svg`
+
+Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombres.
 
 ### Barra de Texto Superior (Text Bar)
 - Configurable desde **Apariencia > Ocellaris Text Bar**
@@ -104,7 +114,11 @@ ocellaris-astra/
 - Filtro de métodos de envío
 - Eliminación automática de imágenes al borrar productos
 
----
+## Actualizaciones Recientes
+- Se añadieron badges de métodos de pago en el footer: Visa, Mastercard, American Express y Mercado Pago.
+- Se añadieron flechas laterales en el menú de categorías para reforzar la indicación de contenido adicional.
+- Se ajustó el bloque Featured Brands reduciendo padding y aumentando el tamaño visible de los logos.
+- Se ajustó el bloque Featured Products (`blocks/featured-products/style.css`) para reducir espacios entre tarjetas y optimizar altura de imagen en desktop y mobile.
 
 ## Bloques de Gutenberg
 

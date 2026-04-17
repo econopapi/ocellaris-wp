@@ -1,7 +1,7 @@
 /* Ocellaris Featured Brands Block - Frontend Styles */
 
 .ocellaris-featured-brands {
-  padding: 60px 20px;
+  padding: 38px 14px;
   max-width: 1400px;
   margin: 0 auto;
   position: relative;
@@ -22,7 +22,7 @@
 }
 
 .ocellaris-featured-brands.mode-grid .brand-link {
-  height: 120px;
+  height: 126px;
   width: 100%;
   display: flex;
   align-items: center;
@@ -30,7 +30,7 @@
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 25px;
+  padding: 14px;
   transition: all 0.3s ease;
   text-decoration: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -44,7 +44,7 @@
 
 .ocellaris-featured-brands.mode-grid .brand-logo {
   max-width: 100%;
-  max-height: 70px;
+  max-height: 92px;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -85,7 +85,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -163,7 +163,7 @@
 
 .brand-item {
   flex-shrink: 0;
-  padding: 0 15px;
+  padding: 0 8px;
   box-sizing: border-box;
   overflow: visible;
 }
@@ -186,11 +186,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100px;
+  height: 112px;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  padding: 20px;
+  padding: 10px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
   text-decoration: none;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -212,7 +212,7 @@
 
 .brand-logo {
   max-width: 100%;
-  max-height: 60px;
+  max-height: 82px;
   width: auto;
   height: auto;
   object-fit: contain;
@@ -243,32 +243,32 @@
 @media (max-width: 1024px) {
   .ocellaris-featured-brands.mode-grid .brands-grid {
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 25px;
+    gap: 18px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-link {
-    height: 110px;
-    padding: 20px;
+    height: 116px;
+    padding: 12px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-logo {
-    max-height: 60px;
+    max-height: 82px;
   }
 }
 
 @media (max-width: 768px) {
   .ocellaris-featured-brands.mode-grid .brands-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px;
+    gap: 14px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-link {
-    height: 100px;
-    padding: 15px;
+    height: 104px;
+    padding: 10px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-logo {
-    max-height: 55px;
+    max-height: 74px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-name-text {
@@ -279,16 +279,16 @@
 @media (max-width: 480px) {
   .ocellaris-featured-brands.mode-grid .brands-grid {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 15px;
+    gap: 12px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-link {
-    height: 90px;
-    padding: 12px;
+    height: 94px;
+    padding: 8px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-logo {
-    max-height: 50px;
+    max-height: 64px;
   }
   
   .ocellaris-featured-brands.mode-grid .brand-name-text {
@@ -299,7 +299,7 @@
 /* Carousel Mode Responsive Styles */
 @media (max-width: 1024px) {
   .brands-carousel-wrapper {
-    gap: 15px;
+    gap: 10px;
   }
   
   .carousel-nav {
@@ -308,18 +308,18 @@
   }
   
   .brand-link {
-    height: 90px;
-    padding: 15px;
+    height: 102px;
+    padding: 8px;
   }
   
   .brand-logo {
-    max-height: 50px;
+    max-height: 72px;
   }
 }
 
 @media (max-width: 768px) {
   .ocellaris-featured-brands {
-    padding: 40px 15px;
+    padding: 30px 12px;
   }
   
   .brands-title {
@@ -344,16 +344,16 @@
   }
   
   .brand-item {
-    padding: 0 10px;
+    padding: 0 6px;
   }
   
   .brand-link {
-    height: 80px;
-    padding: 12px;
+    height: 94px;
+    padding: 7px;
   }
   
   .brand-logo {
-    max-height: 45px;
+    max-height: 66px;
   }
   
   .brand-name-text {
@@ -378,16 +378,16 @@
   }
   
   .brand-item {
-    padding: 0 8px;
+    padding: 0 5px;
   }
   
   .brand-link {
-    height: 70px;
-    padding: 10px;
+    height: 84px;
+    padding: 6px;
   }
   
   .brand-logo {
-    max-height: 40px;
+    max-height: 58px;
   }
   
   .brand-name-text {
