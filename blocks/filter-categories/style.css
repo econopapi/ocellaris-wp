@@ -1,0 +1,13 @@
+.ocellaris-filter-categories { margin-bottom: 20px; }
+.ocellaris-filter-categories .filter-title { font-size: 16px; margin-bottom: 10px; }
+.ocellaris-filter-categories .filter-options {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-height: calc(100vh - 420px);
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding-right: 6px; /* espacio para scrollbar */
+}
+.ocellaris-filter-categories .filter-option { font-size: 14px; }
+.ocellaris-filter-categories .filter-option input { margin-right: 8px; }
