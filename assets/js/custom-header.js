@@ -13,6 +13,8 @@
         const submenuClose = $('.submenu-sidebar-close');
         const submenuPanel = $('.ocellaris-submenu-panel');
         const submenuContent = $('.submenu-panel-content');
+
+        // Note: removed aggressive iOS inner-scroll hack to avoid scroll jumping.
         const searchWrap = $('.ocellaris-search');
         const searchForm = $('.ocellaris-search .search-form');
         const searchField = searchForm.find('.search-field');
@@ -205,6 +207,7 @@
         menuToggle.on('click', function() {
             sidebarMenu.addClass('active');
             sidebarOverlay.addClass('active');
+            // Use simple overflow lock to avoid interfering with inner scrolling
             $('body').css('overflow', 'hidden');
         });
 
@@ -214,6 +217,7 @@
             sidebarOverlay.removeClass('active');
             submenuPanel.removeClass('active');
             $('.sidebar-menu-list .menu-item').removeClass('active');
+            // Restore body scroll behavior
             $('body').css('overflow', '');
             
             // Pequeño delay para que la animación se vea mejor
