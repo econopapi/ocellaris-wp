@@ -275,7 +275,8 @@ header .custom-logo-link img {
   transform: translateX(-50%) translateY(-20px);
   width: 90%;
   max-width: 600px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 100px - env(safe-area-inset-bottom));
+  max-height: calc(100vh - 100px - constant(safe-area-inset-bottom));
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
@@ -283,7 +284,12 @@ header .custom-logo-link img {
   visibility: hidden;
   transition: all 0.3s ease-in-out;
   z-index: 1999;
-  overflow: hidden;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-bottom: calc(12px + constant(safe-area-inset-bottom));
 }
 
 .ocellaris-sidebar-menu.active {
@@ -347,8 +353,11 @@ header .custom-logo-link img {
 /* Contenido del sidebar con dos columnas */
 .sidebar-content {
   display: flex;
-  max-height: calc(100vh - 170px);
+  max-height: calc(100vh - 170px - env(safe-area-inset-bottom));
+  max-height: calc(100vh - 170px - constant(safe-area-inset-bottom));
   overflow: hidden;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  padding-bottom: calc(12px + constant(safe-area-inset-bottom));
 }
 
 /* Columna izquierda - Quick Links */
@@ -472,13 +481,17 @@ header .custom-logo-link img {
   transform: translateX(calc(-50% + 320px)) translateY(-20px);
   width: 90%;
   max-width: 360px;
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 100px - env(safe-area-inset-bottom));
+  max-height: calc(100vh - 100px - constant(safe-area-inset-bottom));
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease-in-out;
   z-index: 2000;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   opacity: 0;
   visibility: hidden;
 }
@@ -640,16 +653,20 @@ header .custom-logo-link img {
 
   .sidebar-content {
     flex-direction: column;
-    max-height: calc(100vh - 80px);
+    /* Let the outer sidebar be the single scroll container on mobile */
+    max-height: none;
+    overflow: visible;
   }
 
   .sidebar-quick-links {
     width: 100%;
-    max-height: 250px;
+    max-height: none;
+    overflow: visible;
   }
 
   .sidebar-main-categories {
-    max-height: calc(100vh - 330px);
+    max-height: none;
+    overflow: visible;
   }
 
   .sidebar-menu-list .menu-item a {

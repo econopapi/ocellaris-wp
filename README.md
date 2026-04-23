@@ -121,6 +121,8 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Se ajustó el bloque Featured Products (`blocks/featured-products/style.css`) para reducir espacios entre tarjetas y optimizar altura de imagen en desktop y mobile.
 - Se ajustó el bloque Product Categories (`blocks/product-categories/style.css`) para que las imágenes sobresalgan del contenedor circular, manteniendo comportamiento responsive en desktop y mobile.
 
+- Se corrigió el menú lateral en mobile (iPhone): ahora el sidebar respeta el `safe-area-inset-bottom` y tiene padding inferior adicional para que las últimas categorías sean accesibles desde el menú principal.
+
 ## Bloques de Gutenberg
 
 ### Ocellaris Product Categories
