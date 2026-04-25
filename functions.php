@@ -798,6 +798,14 @@ function ocellaris_register_featured_products_block() {
 		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION
 	);
 
+	wp_register_script(
+		'ocellaris-featured-products-carousel',
+		get_stylesheet_directory_uri() . '/blocks/featured-products/carousel.js',
+		array('jquery'),
+		CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION,
+		true
+	);
+
 	// register the block
 	register_block_type(
 		'ocellaris/featured-products',
@@ -851,18 +859,17 @@ add_action('init', 'ocellaris_register_featured_products_block');
  */
 function ocellaris_render_featured_products_block($attributes) {
 	$title = isset($attributes['title']) ? $attributes['title'] : 'FEATURED PRODUCTS';
-	$products_to_show = isset($attributes['productsToShow']) ? (int)$attributes['productsToShow'] : 4;
+	$products_to_show = isset($attributes['productsToShow']) ? max(1, (int)$attributes['productsToShow']) : 4;
 	$filter_type = isset($attributes['filterType']) ? $attributes['filterType'] : 'manual';
 	$selected_products = isset($attributes['selectedProducts']) ? $attributes['selectedProducts'] : array();
 	$selected_tags = isset($attributes['selectedTags']) ? $attributes['selectedTags'] : array();
-	$show_on_sale = isset($attributes['showOnSale']) ? $attributes['showOnSale'] : false;
-	$show_featured = isset($attributes['showFeatured']) ? $attributes['showFeatured'] : false;
 	$randomize_products = isset($attributes['randomizeProducts']) ? $attributes['randomizeProducts'] : false;
+	$query_limit = $products_to_show;
 
 	// Preparar argumentos para WP_Query
 	$args = array(
 		'post_type' => 'product',
-		'posts_per_page' => $products_to_show,
+		'posts_per_page' => $query_limit,
 		'post_status' => 'publish',
 		'meta_query' => array(
 			array(
@@ -879,16 +886,15 @@ function ocellaris_render_featured_products_block($attributes) {
 		case 'manual':
 			if (!empty($selected_products)) {
 				if ($randomize_products) {
-					// Si queremos orden aleatorio, no usar post__in con orderby
 					$args['post__in'] = $selected_products;
 					$args['orderby'] = 'rand';
 				} else {
-					// Orden normal según selección
 					$args['post__in'] = $selected_products;
 					$args['orderby'] = 'post__in';
 				}
-				// Aumentar el límite para compensar productos fuera de stock
-				$args['posts_per_page'] = count($selected_products) * 2; // multiplicar por 2 para asegurar suficientes productos
+				// Compensar productos no visibles/sin stock sin limitar la selección manual.
+				$query_limit = max(count($selected_products) * 2, $products_to_show);
+				$args['posts_per_page'] = $query_limit;
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay productos seleccionados.</p></div>';
 			}
@@ -913,6 +919,8 @@ function ocellaris_render_featured_products_block($attributes) {
 			if ($randomize_products) {
 				$args['orderby'] = 'rand';
 			}
+			$query_limit = max($products_to_show * 3, 12);
+			$args['posts_per_page'] = $query_limit;
 			break;
 
 		case 'featured':
@@ -924,6 +932,8 @@ function ocellaris_render_featured_products_block($attributes) {
 			if ($randomize_products) {
 				$args['orderby'] = 'rand';
 			}
+			$query_limit = max($products_to_show * 3, 12);
+			$args['posts_per_page'] = $query_limit;
 			break;
 
 		case 'tags':
@@ -936,6 +946,8 @@ function ocellaris_render_featured_products_block($attributes) {
 				if ($randomize_products) {
 					$args['orderby'] = 'rand';
 				}
+				$query_limit = max($products_to_show * 3, 12);
+				$args['posts_per_page'] = $query_limit;
 			} else {
 				return '<div class="ocellaris-featured-products"><p>No hay etiquetas seleccionadas.</p></div>';
 			}
@@ -948,14 +960,35 @@ function ocellaris_render_featured_products_block($attributes) {
 		return '<div class="ocellaris-featured-products"><p>No se encontraron productos.</p></div>';
 	}
 
-	// Para selección manual, determinar cuántos productos en stock tenemos disponibles
-	if ($filter_type === 'manual') {
-		$displayed_count = min(count($selected_products), $products->found_posts);
-	} else {
-		$displayed_count = min($products_to_show, $products->found_posts);
+	$product_ids = array();
+	$max_results = $filter_type === 'manual' ? count($selected_products) : $query_limit;
+
+	while ($products->have_posts() && count($product_ids) < $max_results) {
+		$products->the_post();
+		global $product;
+
+		if (!$product || !$product->is_visible() || !$product->is_in_stock()) {
+			continue;
+		}
+
+		$product_ids[] = get_the_ID();
 	}
-	
-	$grid_class = 'products-count-' . $displayed_count;
+
+	wp_reset_postdata();
+
+	if (empty($product_ids)) {
+		return '<div class="ocellaris-featured-products"><p>No se encontraron productos.</p></div>';
+	}
+
+	$total_products = count($product_ids);
+	$use_carousel = $total_products > $products_to_show;
+	$items_to_render = $use_carousel ? $product_ids : array_slice($product_ids, 0, $products_to_show);
+	$grid_class = 'products-count-' . min($products_to_show, 4);
+	$grid_style = '--products-per-view:' . $products_to_show . ';';
+
+	if ($use_carousel) {
+		wp_enqueue_script('ocellaris-featured-products-carousel');
+	}
 
 	ob_start();
 	?>
@@ -964,47 +997,38 @@ function ocellaris_render_featured_products_block($attributes) {
 		<?php if (!empty($title)): ?>
 			<h2 class="ocellaris-featured-products-title"><?php echo esc_html($title); ?></h2>
 		<?php endif; ?>
-		
-		<div class="featured-products-grid <?php echo esc_attr($grid_class); ?>">
-			<?php 
-			$products_displayed = 0;
-			$max_products = ($filter_type === 'manual') ? count($selected_products) : $products_to_show;
-			
-			while ($products->have_posts() && $products_displayed < $max_products): 
-				$products->the_post(); 
-				global $product;
-				
-				// Skip if product is not valid or not visible
-				if (!$product || !$product->is_visible()) {
-					continue;
-				}
-				
-				// Verificar stock adicional por si acaso
-				if (!$product->is_in_stock()) {
-					continue;
-				}
-				
-				$product_id = get_the_ID();
-				$is_on_sale = $product->is_on_sale();
-				$is_featured = $product->is_featured();
-				$rating = $product->get_average_rating();
-				$review_count = $product->get_review_count();
-				
-				// Calcular porcentaje de descuento si está en oferta
-				$discount_percentage = 0;
-				if ($is_on_sale) {
-					$regular_price = (float) $product->get_regular_price();
-					$sale_price = (float) $product->get_sale_price();
-					if ($regular_price > 0 && $sale_price > 0) {
-						$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
-					}
-				}
 
-				// Check MSI eligibility
-				$is_msi_eligible = ocellaris_is_product_msi_eligible( $product_id );
-				
-				$products_displayed++;
-			?>
+		<?php if ($use_carousel): ?>
+		<div class="featured-products-carousel-wrapper" data-visible-items="<?php echo esc_attr($products_to_show); ?>" data-total-items="<?php echo esc_attr($total_products); ?>">
+			<div class="featured-products-carousel-header">
+				<div class="featured-products-carousel-dots" aria-hidden="true"></div>
+			</div>
+			<div class="featured-products-carousel-body">
+				<button class="featured-products-carousel-nav carousel-prev" aria-label="Productos anteriores" type="button">
+					<span class="featured-products-carousel-icon" aria-hidden="true">&lsaquo;</span>
+				</button>
+				<div class="featured-products-carousel-viewport">
+					<div class="featured-products-grid featured-products-carousel-track <?php echo esc_attr($grid_class); ?>" style="<?php echo esc_attr($grid_style); ?>">
+						<?php foreach ($items_to_render as $product_id): ?>
+						<?php
+						$product = wc_get_product($product_id);
+						if (!$product || !$product->is_visible() || !$product->is_in_stock()) {
+							continue;
+						}
+						$is_on_sale = $product->is_on_sale();
+						$is_featured = $product->is_featured();
+						$rating = $product->get_average_rating();
+						$review_count = $product->get_review_count();
+						$discount_percentage = 0;
+						if ($is_on_sale) {
+							$regular_price = (float) $product->get_regular_price();
+							$sale_price = (float) $product->get_sale_price();
+							if ($regular_price > 0 && $sale_price > 0) {
+								$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
+							}
+						}
+						$is_msi_eligible = ocellaris_is_product_msi_eligible( $product_id );
+						?>
 			<div class="featured-product-item <?php echo $is_on_sale ? 'on-sale' : ''; ?> <?php echo $is_featured ? 'featured' : ''; ?>">
 				
 				<!-- Badge condicional -->
@@ -1028,7 +1052,7 @@ function ocellaris_render_featured_products_block($attributes) {
 				<!-- Imagen del producto -->
 				<div class="featured-product-image">
 					<a href="<?php echo get_permalink($product_id); ?>">
-						<?php echo woocommerce_get_product_thumbnail(); ?>
+						<?php echo $product->get_image('woocommerce_thumbnail'); ?>
 					</a>
 				</div>
 				
@@ -1066,7 +1090,7 @@ function ocellaris_render_featured_products_block($attributes) {
 					<!-- Título del producto -->
 					<h3 class="featured-product-title">
 						<a href="<?php echo get_permalink($product_id); ?>">
-							<?php echo get_the_title(); ?>
+							<?php echo get_the_title($product_id); ?>
 						</a>
 					</h3>
 					
@@ -1078,16 +1102,125 @@ function ocellaris_render_featured_products_block($attributes) {
 					<!-- Botón Add to Cart -->
 					<div class="featured-add-to-cart">
 						<?php
+						$post_object = get_post($product_id);
+						if ($post_object instanceof WP_Post) {
+							setup_postdata($post_object);
+							$GLOBALS['product'] = $product;
 						woocommerce_template_loop_add_to_cart();
+						}
 						?>
 					</div>
 					
 				</div>
 			</div>
-			<?php endwhile; ?>
+			<?php endforeach; ?>
+					</div>
+				</div>
+				<button class="featured-products-carousel-nav carousel-next" aria-label="Siguientes productos" type="button">
+					<span class="featured-products-carousel-icon" aria-hidden="true">&rsaquo;</span>
+				</button>
+			</div>
 		</div>
+		<?php else: ?>
+		<div class="featured-products-grid <?php echo esc_attr($grid_class); ?>" style="<?php echo esc_attr($grid_style); ?>">
+			<?php foreach ($items_to_render as $product_id): ?>
+			<?php
+			$product = wc_get_product($product_id);
+			if (!$product || !$product->is_visible() || !$product->is_in_stock()) {
+				continue;
+			}
+			$is_on_sale = $product->is_on_sale();
+			$is_featured = $product->is_featured();
+			$rating = $product->get_average_rating();
+			$review_count = $product->get_review_count();
+			$discount_percentage = 0;
+			if ($is_on_sale) {
+				$regular_price = (float) $product->get_regular_price();
+				$sale_price = (float) $product->get_sale_price();
+				if ($regular_price > 0 && $sale_price > 0) {
+					$discount_percentage = round((($regular_price - $sale_price) / $regular_price) * 100);
+				}
+			}
+			$is_msi_eligible = ocellaris_is_product_msi_eligible( $product_id );
+			?>
+			<div class="featured-product-item <?php echo $is_on_sale ? 'on-sale' : ''; ?> <?php echo $is_featured ? 'featured' : ''; ?>">
+				<div class="featured-product-badge">
+					<?php if ($filter_type === 'sale' && $is_on_sale && $discount_percentage > 0): ?>
+						<span class="sale-badge">
+							<span class="save-text">DESCUENTO</span><br>
+							<span class="discount-percent"><?php echo $discount_percentage; ?>%</span>
+						</span>
+					<?php elseif (!$is_msi_eligible): ?>
+						<span class="brs-badge">Recomendación Ocellaris</span>
+					<?php endif; ?>
+				</div>
+
+				<?php if ($is_msi_eligible): ?>
+				<div class="featured-product-badge msi-badge-container <?php echo ($filter_type === 'sale' && $is_on_sale && $discount_percentage > 0) ? 'has-sale-badge' : (($filter_type !== 'sale') ? 'has-brs-badge' : ''); ?>">
+					<span class="msi-badge">Meses sin intereses</span>
+				</div>
+				<?php endif; ?>
+
+				<div class="featured-product-image">
+					<a href="<?php echo get_permalink($product_id); ?>">
+						<?php echo $product->get_image('woocommerce_thumbnail'); ?>
+					</a>
+				</div>
+
+				<div class="featured-product-content">
+					<?php if ($rating > 0): ?>
+					<div class="featured-product-rating">
+						<div class="star-rating">
+							<?php
+							for ($i = 1; $i <= 5; $i++) {
+								if ($i <= $rating) {
+									echo '<span class="star filled">★</span>';
+								} else {
+									echo '<span class="star empty">☆</span>';
+								}
+							}
+							?>
+						</div>
+					</div>
+					<?php endif; ?>
+
+					<?php
+					$brands = get_the_terms($product_id, 'pa_brand');
+					if ($brands && !is_wp_error($brands)):
+						$brand = array_shift($brands);
+					?>
+					<div class="featured-product-brand">
+						<?php echo esc_html($brand->name); ?>
+					</div>
+					<?php endif; ?>
+
+					<h3 class="featured-product-title">
+						<a href="<?php echo get_permalink($product_id); ?>">
+							<?php echo get_the_title($product_id); ?>
+						</a>
+					</h3>
+
+					<div class="featured-product-price">
+						<?php echo $product->get_price_html(); ?>
+					</div>
+
+					<div class="featured-add-to-cart">
+						<?php
+						$post_object = get_post($product_id);
+						if ($post_object instanceof WP_Post) {
+							setup_postdata($post_object);
+							$GLOBALS['product'] = $product;
+							woocommerce_template_loop_add_to_cart();
+						}
+						?>
+					</div>
+				</div>
+			</div>
+			<?php endforeach; ?>
+		</div>
+		<?php endif; ?>
 	</div>
-	
+
 	<?php
 	wp_reset_postdata();
 	return ob_get_clean();

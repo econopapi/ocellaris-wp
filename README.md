@@ -120,6 +120,8 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Se ajustó el bloque Featured Brands reduciendo padding y aumentando el tamaño visible de los logos.
 - Se ajustó el bloque Featured Products (`blocks/featured-products/style.css`) para reducir espacios entre tarjetas y optimizar altura de imagen en desktop y mobile.
 - Se ajustó el bloque Product Categories (`blocks/product-categories/style.css`) para que las imágenes sobresalgan del contenedor circular, manteniendo comportamiento responsive en desktop y mobile.
+- Se refactorizó el bloque Featured Products para que `productsToShow` funcione como layout visible (cards por vista), y se active carrusel automáticamente cuando hay más productos que columnas visibles.
+- Se mejoró la UX del editor de Featured Products agregando una lista de productos seleccionados con opción de remover rápidamente sin tener que buscarlos otra vez en todo el catálogo.
 
 - Se corrigió el menú lateral en mobile (iPhone): ahora el sidebar respeta el `safe-area-inset-bottom` y tiene padding inferior adicional para que las últimas categorías sean accesibles desde el menú principal.
 
@@ -148,6 +150,22 @@ Carrusel de marcas destacadas con autoplay y navegación.
 **Uso:** Añadir desde el editor de bloques buscando "Ocellaris Featured Brands".
 
 <img width="2671" height="545" alt="Image" src="https://github.com/user-attachments/assets/c3135791-f885-4ee9-a34b-526f6e78ec98" />
+
+### Ocellaris Featured Products
+Bloque de productos destacados con selección manual o filtros automáticos, y carrusel condicional en frontend.
+
+**Atributos:**
+- `title` - Título del bloque
+- `productsToShow` - Número de tarjetas visibles por vista (layout)
+- `filterType` - Tipo de filtro (`manual`, `tags`, `sale`, `featured`)
+- `selectedProducts` - Array de IDs de productos (modo manual, sin límite estricto)
+- `selectedTags` - Array de IDs de etiquetas (modo tags)
+- `randomizeProducts` - Orden aleatorio en frontend
+
+**Comportamiento clave:**
+- Si el total de productos es menor o igual a `productsToShow`, se renderiza grid normal.
+- Si el total supera `productsToShow`, se activa carrusel con navegación lateral e indicadores por posición.
+- En el editor, el panel de selección manual muestra una lista de seleccionados con botón para quitar cada producto rápidamente.
 
 ---
 
