@@ -11,7 +11,6 @@
   var Button = components.Button;
   var useState = element.useState;
   var useEffect = element.useEffect;
-  var useSelect = data.useSelect;
   var apiFetch = wp.apiFetch;
 
   registerBlockType('ocellaris/featured-products', {
@@ -170,12 +169,9 @@
         var index = selectedProducts.indexOf(productId);
         
         if (index === -1) {
-          // Agregar producto
-          if (selectedProducts.length < attributes.productsToShow) {
-            setAttributes({
-              selectedProducts: [...selectedProducts, productId]
-            });
-          }
+          setAttributes({
+            selectedProducts: [].concat(selectedProducts, [productId])
+          });
         } else {
           // Remover producto
           setAttributes({
@@ -184,6 +180,65 @@
             })
           });
         }
+      }
+
+      function removeSelectedProduct(productId) {
+        setAttributes({
+          selectedProducts: (attributes.selectedProducts || []).filter(function(id) {
+            return id !== productId;
+          })
+        });
+      }
+
+      function getProductById(productId) {
+        for (var i = 0; i < products.length; i++) {
+          if (products[i].id === productId) {
+            return products[i];
+          }
+        }
+        return null;
+      }
+
+      function getProductImage(product) {
+        if (!product || !Array.isArray(product.images) || product.images.length === 0) {
+          return '';
+        }
+        return product.images[0].src || '';
+      }
+
+      function getProductPrice(product) {
+        if (!product) {
+          return '';
+        }
+
+        function normalizePriceText(value) {
+          if (typeof value !== 'string' || value.length === 0) {
+            return '';
+          }
+
+          // Convertir HTML de WooCommerce a texto legible para el editor.
+          return value
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/&#0*36;|&dollar;/gi, '$')
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/&amp;/gi, '&')
+            .replace(/\s+/g, ' ')
+            .trim();
+        }
+
+        if (typeof product.price_html === 'string' && product.price_html.length > 0) {
+          return normalizePriceText(product.price_html);
+        }
+
+        if (typeof product.price === 'string' && product.price.length > 0) {
+          return '$' + product.price;
+        }
+
+        if (typeof product.prices === 'object' && product.prices && typeof product.prices.price === 'string') {
+          return '$' + product.prices.price;
+        }
+
+        return '';
       }
 
       function toggleTagSelection(tagId) {
@@ -214,15 +269,23 @@
         );
       });
 
+      var selectedProductItems = (attributes.selectedProducts || []).map(function(productId) {
+        return {
+          id: productId,
+          product: getProductById(productId)
+        };
+      });
+
       // Obtener productos seleccionados para mostrar
       var displayProducts = [];
       if (attributes.filterType === 'manual') {
-        displayProducts = products.filter(function(product) {
-          return attributes.selectedProducts.includes(product.id);
-        });
+        displayProducts = selectedProductItems.map(function(item) { return item.product; }).filter(function(product) { return !!product; });
       } else {
-        displayProducts = filteredProducts.slice(0, attributes.productsToShow);
+        displayProducts = products.slice(0, attributes.productsToShow);
       }
+
+      var isManualCarouselActive = attributes.filterType === 'manual' && (attributes.selectedProducts || []).length > attributes.productsToShow;
+      var previewProducts = displayProducts.slice(0, attributes.productsToShow);
 
       // Skeletons para feedback de carga en la selección manual
       var skeletonItems = Array.from({ length: 6 }).map(function (_, idx) {
@@ -249,7 +312,8 @@
               }
             }),
             el(RangeControl, {
-              label: 'Productos a mostrar',
+              label: 'Tarjetas visibles (layout)',
+              help: 'Define cuantas tarjetas se muestran a la vez. Si hay mas productos, se activa carrusel en frontend.',
               value: attributes.productsToShow,
               onChange: function(value) {
                 setAttributes({ productsToShow: value });
@@ -289,6 +353,38 @@
             // Selección manual de productos
             attributes.filterType === 'manual' && el('div', {}, [
               el('h4', {}, 'Seleccionar Productos'),
+              el('p', { className: 'selection-summary' }, 'Seleccionados: ' + (attributes.selectedProducts || []).length + ' | Visibles por vista: ' + attributes.productsToShow),
+
+              el('div', { className: 'selected-products-list' }, [
+                el('h4', {}, 'Productos seleccionados'),
+                selectedProductItems.length === 0
+                  ? el('p', { className: 'selected-products-empty' }, 'Todavia no has seleccionado productos.')
+                  : selectedProductItems.map(function(item) {
+                      var selectedImage = item.product ? getProductImage(item.product) : '';
+                      return el('div', {
+                        key: 'selected-' + item.id,
+                        className: 'selected-product-item'
+                      }, [
+                        selectedImage && el('img', {
+                          src: selectedImage,
+                          alt: item.product ? item.product.name : ('Producto ' + item.id),
+                          className: 'selected-product-thumb'
+                        }),
+                        el('div', { className: 'selected-product-meta' }, [
+                          el('strong', {}, item.product ? item.product.name : ('Producto ID #' + item.id)),
+                          el('span', {}, item.product ? getProductPrice(item.product) : 'Cargando...')
+                        ]),
+                        el(Button, {
+                          isSecondary: true,
+                          isSmall: true,
+                          onClick: function() {
+                            removeSelectedProduct(item.id);
+                          }
+                        }, 'Quitar')
+                      ]);
+                    })
+              ]),
+
               isLoading && el('p', { className: 'loading-hint' }, 'Cargando productos, esto puede tardar unos segundos...'),
               el(TextControl, {
                 label: 'Buscar productos',
@@ -304,19 +400,20 @@
                     ? [el('p', { className: 'empty-hint' }, 'No hay productos disponibles. Intenta otra búsqueda.')]
                     : filteredProducts.map(function(product) {
                         var isSelected = attributes.selectedProducts.includes(product.id);
+                        var productImage = getProductImage(product);
                         return el('div', {
                           key: product.id,
                           className: 'product-item ' + (isSelected ? 'selected' : ''),
                           onClick: function() { toggleProductSelection(product.id); }
                         }, [
-                          product.images[0] && el('img', {
-                            src: product.images[0].src,
+                          productImage && el('img', {
+                            src: productImage,
                             alt: product.name,
                             style: { width: '50px', height: '50px', objectFit: 'cover' }
                           }),
                           el('div', {}, [
                             el('strong', {}, product.name),
-                            el('div', {}, '$' + product.price)
+                            el('div', {}, getProductPrice(product))
                           ])
                         ]);
                       })
@@ -357,16 +454,19 @@
           isLoading && el('p', {}, 'Cargando productos...'),
           
           !isLoading && displayProducts.length === 0 && el('p', {}, 'No hay productos para mostrar.'),
+
+          !isLoading && isManualCarouselActive && el('p', { className: 'carousel-preview-hint' }, 'Carrusel activo en frontend: hay mas productos seleccionados que tarjetas visibles.'),
           
-          !isLoading && displayProducts.length > 0 && el('div', {
+          !isLoading && previewProducts.length > 0 && el('div', {
             style: {
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(' + attributes.productsToShow + ', minmax(0, 1fr))',
               gap: '20px',
               maxWidth: '1200px',
               margin: '0 auto'
             }
-          }, displayProducts.slice(0, attributes.productsToShow).map(function(product) {
+          }, previewProducts.map(function(product) {
+            var previewImage = getProductImage(product);
             return el('div', {
               key: product.id,
               style: {
@@ -377,8 +477,8 @@
                 backgroundColor: '#fff'
               }
             }, [
-              product.images[0] && el('img', {
-                src: product.images[0].src,
+              previewImage && el('img', {
+                src: previewImage,
                 alt: product.name,
                 style: {
                   width: '100%',
@@ -397,7 +497,7 @@
                   fontWeight: 'bold',
                   marginBottom: '10px'
                 }
-              }, '$' + product.price),
+              }, getProductPrice(product)),
               el('div', {
                 style: {
                   backgroundColor: '#007cba',
