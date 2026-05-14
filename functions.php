@@ -1739,7 +1739,7 @@ function ocellaris_display_text_bar() {
 		<?php
 	}
 }
-add_action('astra_header_before', 'ocellaris_display_text_bar');
+add_action('wp_body_open', 'ocellaris_display_text_bar');
 
 /**
  * Estilos adicionales para la barra de texto en frontend
@@ -1747,9 +1747,34 @@ add_action('astra_header_before', 'ocellaris_display_text_bar');
 function ocellaris_text_bar_frontend_styles() {
 	?>
 	<style>
+		:root {
+			--ocellaris-topbar-offset: 0px;
+		}
+
 		.ocellaris-text-bar {
-			position: relative;
-			z-index: 999;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			width: 100%;
+			z-index: 1900;
+			box-sizing: border-box;
+		}
+
+		/* mantener el header sticky por debajo de la topbar durante el scroll */
+		.ocellaris-header {
+			top: var(--ocellaris-topbar-offset) !important;
+		}
+
+		/* evitar solapamiento con la barra de admin de WordPress */
+		body.admin-bar .ocellaris-text-bar {
+			top: 32px;
+		}
+
+		@media screen and (max-width: 782px) {
+			body.admin-bar .ocellaris-text-bar {
+				top: 46px;
+			}
 		}
 
 		.ocellaris-text-bar:hover {
@@ -1773,6 +1798,35 @@ function ocellaris_text_bar_frontend_styles() {
 			}
 		}
 	</style>
+	<script>
+		(function() {
+			function updateBodyOffset() {
+				var bar = document.querySelector('.ocellaris-text-bar');
+				if (!document.body || !document.documentElement) {
+					return;
+				}
+
+				if (!bar) {
+					document.body.style.paddingTop = '';
+					document.documentElement.style.setProperty('--ocellaris-topbar-offset', '0px');
+					return;
+				}
+
+				var adminOffset = 0;
+				if (document.body.classList.contains('admin-bar')) {
+					adminOffset = window.innerWidth <= 782 ? 46 : 32;
+				}
+
+				var totalOffset = bar.offsetHeight + adminOffset;
+				document.body.style.paddingTop = totalOffset + 'px';
+				document.documentElement.style.setProperty('--ocellaris-topbar-offset', totalOffset + 'px');
+			}
+
+			window.addEventListener('load', updateBodyOffset);
+			window.addEventListener('resize', updateBodyOffset);
+			document.addEventListener('DOMContentLoaded', updateBodyOffset);
+		})();
+	</script>
 	<?php
 }
 add_action('wp_head', 'ocellaris_text_bar_frontend_styles');
