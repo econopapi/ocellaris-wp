@@ -12,6 +12,7 @@ if (!defined('CHILD_THEME_OCELLARIS_CUSTOM_ASTRA_VERSION')) {
 
 $GLOBALS['ocellaris_registered_actions'] = array();
 $GLOBALS['ocellaris_registered_filters'] = array();
+$GLOBALS['ocellaris_test_taxonomies'] = array();
 
 if (!function_exists('add_action')) {
     function add_action($hook, $callback, $priority = 10, $accepted_args = 1)
@@ -59,5 +60,12 @@ if (!function_exists('absint')) {
     function absint($maybeint)
     {
         return abs((int) $maybeint);
+    }
+}
+
+if (!function_exists('taxonomy_exists')) {
+    function taxonomy_exists($taxonomy)
+    {
+        return in_array((string) $taxonomy, $GLOBALS['ocellaris_test_taxonomies'], true);
     }
 }

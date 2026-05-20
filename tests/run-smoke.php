@@ -143,6 +143,52 @@ if (function_exists('ocellaris_admin_health_badge')) {
     }
 }
 
+if (function_exists('ocellaris_render_product_categories_block')) {
+    $output = ocellaris_render_product_categories_block(array('selectedCategories' => array()));
+    if ($output !== '') {
+        $failures[] = 'ocellaris_render_product_categories_block should return empty string when no categories are selected';
+    }
+}
+
+if (function_exists('ocellaris_render_featured_brands_block')) {
+    $output = ocellaris_render_featured_brands_block(array('selectedBrands' => array()));
+    if ($output !== '') {
+        $failures[] = 'ocellaris_render_featured_brands_block should return empty string when no brands are selected';
+    }
+}
+
+if (function_exists('ocellaris_render_featured_products_block')) {
+    $manualEmpty = ocellaris_render_featured_products_block(
+        array(
+            'filterType' => 'manual',
+            'selectedProducts' => array(),
+        )
+    );
+
+    if (strpos($manualEmpty, 'No hay productos seleccionados.') === false) {
+        $failures[] = 'ocellaris_render_featured_products_block must show manual empty-state message';
+    }
+
+    $tagsEmpty = ocellaris_render_featured_products_block(
+        array(
+            'filterType' => 'tags',
+            'selectedTags' => array(),
+        )
+    );
+
+    if (strpos($tagsEmpty, 'No hay etiquetas seleccionadas.') === false) {
+        $failures[] = 'ocellaris_render_featured_products_block must show tags empty-state message';
+    }
+}
+
+if (function_exists('ocellaris_render_filter_brand_block')) {
+    $GLOBALS['ocellaris_test_taxonomies'] = array();
+    $output = ocellaris_render_filter_brand_block(array());
+    if ($output !== '') {
+        $failures[] = 'ocellaris_render_filter_brand_block should return empty string when no brand taxonomy exists';
+    }
+}
+
 if (!empty($failures)) {
     fwrite(STDERR, "[FAIL] Ocellaris smoke tests\n");
     foreach ($failures as $failure) {

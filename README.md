@@ -88,6 +88,9 @@ ocellaris-astra/
 ├── tests/
 │   ├── bootstrap.php            # Stubs para hooks WordPress en entorno de test
 │   └── run-smoke.php            # Runner de smoke tests sin Composer/PHPUnit
+│   ├── run-smoke-structure.php  # Smoke test de integridad de estructura del tema
+│   ├── run-lint.sh              # Lint sintactico PHP recursivo
+│   └── run-all-tests.sh         # Ejecuta toda la suite de tests nativos
 └── README.md
 ```
 
@@ -143,6 +146,8 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se añadió lint sintáctico recursivo con `tests/run-lint.sh` y runner unificado `tests/run-all-tests.sh`.
+- Se ampliaron smoke tests con contratos de render para estados base (empty-state y fallback de taxonomía).
 - Se amplió la cobertura de smoke tests nativos para validar callbacks críticos, sanitizadores y estructura mínima de archivos del tema.
 - Se agregó infraestructura de smoke testing ejecutable con PHP nativo (`tests/run-smoke.php`) sin Composer ni PHPUnit.
 - Se movió la limpieza de imágenes al borrar productos desde `functions.php` a `includes/woocommerce/checkout.php`.
@@ -255,10 +260,24 @@ php tests/run-smoke.php
 php tests/run-smoke-structure.php
 ```
 
+3. Ejecutar lint sintáctico de todos los PHP del tema:
+
+```bash
+bash tests/run-lint.sh
+```
+
+4. Ejecutar toda la suite nativa:
+
+```bash
+bash tests/run-all-tests.sh
+```
+
 Cobertura actual inicial:
 - Registro de hooks criticos (`add_action`/`add_filter`) por modulo.
 - Validacion de funciones callback/sanitización críticas.
+- Validación de contratos de render para casos base.
 - Validación de estructura mínima de archivos clave del tema.
+- Lint sintáctico de PHP para todo el árbol del tema.
 
 ---
 
