@@ -18,7 +18,8 @@ Tema hijo de [Astra](https://wpastra.com) desarrollado a medida para el sitio de
 5. [Bloques de Gutenberg](#bloques-de-gutenberg)
 6. [Menús de Navegación](#menús-de-navegación)
 7. [Personalización](#personalización)
-8. [Variables CSS](#variables-css)
+8. [Testing](#testing)
+9. [Variables CSS](#variables-css)
 
 ---
 
@@ -84,6 +85,9 @@ ocellaris-astra/
 ├── functions.php                # Funciones principales del tema
 ├── style.css                    # Hoja de estilos principal y metadatos
 ├── screenshot.jpg               # Captura para el panel de temas
+├── tests/
+│   ├── bootstrap.php            # Stubs para hooks WordPress en entorno de test
+│   └── run-smoke.php            # Runner de smoke tests sin Composer/PHPUnit
 └── README.md
 ```
 
@@ -139,6 +143,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se agregó infraestructura de smoke testing ejecutable con PHP nativo (`tests/run-smoke.php`) sin Composer ni PHPUnit.
 - Se movió la limpieza de imágenes al borrar productos desde `functions.php` a `includes/woocommerce/checkout.php`.
 - Se modularizó el bloque Featured Products en `includes/blocks/featured-products.php` para continuar desacoplando `functions.php`.
 - Se modularizaron los bloques de categorías y marcas (product categories, featured brands, all brands) en `includes/blocks/brands-categories.php`.
@@ -230,6 +235,22 @@ Los colores principales están definidos como variables CSS en `style.css` y pue
 
 ### Menús del Footer
 Crea menús en **Apariencia > Menús** y asígnalos a las ubicaciones del footer.
+
+---
+
+## Testing
+
+La base de pruebas usa smoke tests con **PHP nativo** para validar el registro de hooks en los modulos.
+
+1. Ejecutar smoke tests:
+
+```bash
+php tests/run-smoke.php
+```
+
+Cobertura actual inicial:
+- Registro de hooks criticos (`add_action`/`add_filter`) por modulo.
+- Validacion de carga de modulos clave sin errores fatales de inclusion.
 
 ---
 
