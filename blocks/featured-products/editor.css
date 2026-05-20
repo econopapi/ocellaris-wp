@@ -141,6 +141,27 @@
   font-weight: 600;
 }
 
+.loading-products-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 12px;
+  color: #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.loading-products-state .components-spinner {
+  margin: 0;
+}
+
+.empty-hint {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
+  font-style: italic;
+}
+
 .selected-products-list {
   margin-bottom: 16px;
   border: 1px solid #d6d6d6;

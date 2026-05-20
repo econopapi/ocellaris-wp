@@ -18,7 +18,8 @@ Tema hijo de [Astra](https://wpastra.com) desarrollado a medida para el sitio de
 5. [Bloques de Gutenberg](#bloques-de-gutenberg)
 6. [Menús de Navegación](#menús-de-navegación)
 7. [Personalización](#personalización)
-8. [Variables CSS](#variables-css)
+8. [Testing](#testing)
+9. [Variables CSS](#variables-css)
 
 ---
 
@@ -63,12 +64,40 @@ ocellaris-astra/
 │       ├── block.js             # Registro y editor del bloque
 │       ├── editor.css           # Estilos para el editor
 │       └── style.css            # Estilos para el frontend
+├── includes/
+│   ├── admin/
+│   │   ├── ocellaris-admin-hub.php  # Menú admin unificado Ocellaris
+│   │   └── text-bar.php             # Lógica modular de Text Bar
+│   ├── blocks/
+│   │   ├── brands-categories.php    # Registro/render de bloques de categorías y marcas
+│   │   └── featured-products.php     # Registro/render del bloque Featured Products
+│   ├── msi-promotions/
+│       └── admin-page.php           # Configuración MSI MercadoPago
+│   ├── theme/
+│   │   └── layout.php               # Header/footer, menús y AJAX del header
+│   └── woocommerce/
+│       ├── checkout.php             # Checkout, shipping y cuenta (hooks WooCommerce)
+│       ├── catalog-layout.php       # Layout/estilos del catálogo y hooks del loop
+│       └── catalog-filters.php      # Filtros de catálogo y pre_get_posts
 ├── template-parts/
 │   ├── footer-custom.php        # Template del footer
 │   └── header-custom.php        # Template del header
 ├── functions.php                # Funciones principales del tema
 ├── style.css                    # Hoja de estilos principal y metadatos
 ├── screenshot.jpg               # Captura para el panel de temas
+├── tests/
+│   ├── bootstrap.php            # Stubs para hooks WordPress en entorno de test
+│   └── run-smoke.php            # Runner de smoke tests sin Composer/PHPUnit
+│   ├── run-smoke-structure.php  # Smoke test de integridad de estructura del tema
+│   ├── run-lint.sh              # Lint sintactico PHP recursivo
+│   ├── run-all-tests.sh         # Ejecuta toda la suite de tests nativos
+│   ├── run-http-smoke.sh        # Smoke HTTP contra entorno WP real (local/staging)
+│   ├── run-wp-runtime-checks.php # Validaciones de hooks/bloques con WordPress cargado
+│   ├── run-wp-runtime-checks.sh  # Wrapper WP-CLI para runtime checks
+│   └── regression-checklist.md  # Checklist de regresion para pre-release
+├── .github/
+│   └── workflows/
+│       └── native-tests.yml     # CI: ejecuta suite nativa en push/PR
 └── README.md
 ```
 
@@ -103,10 +132,19 @@ Los íconos SVG de pago se cargan desde:
 Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombres.
 
 ### Barra de Texto Superior (Text Bar)
-- Configurable desde **Apariencia > Ocellaris Text Bar**
+- Configurable desde **Ocellaris > Text Bar**
 - Activar/desactivar desde el panel de administración
 - Color de fondo personalizable
 - Contenido de texto editable
+
+### Hub Administrativo Ocellaris
+- Menú principal único en el dashboard: **Ocellaris**
+- Submenús incluidos:
+  - **Dashboard** (resumen de módulos)
+  - **MSI MercadoPago** (configuración de productos MSI)
+  - **Text Bar** (configuración de barra superior)
+  - **Documentación** (inventario técnico del tema)
+  - **Health Check** (validaciones rápidas no destructivas)
 
 ### Optimizaciones de WooCommerce
 - Ocultación de opciones de envío en el carrito
@@ -115,6 +153,27 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se agregaron runtime checks con WP-CLI (`tests/run-wp-runtime-checks.sh`) para validar hooks y bloques con WordPress real cargado.
+- Se agregó pipeline de CI (`.github/workflows/native-tests.yml`) para ejecutar la suite nativa en cada push/PR.
+- Se agregó smoke HTTP de runtime real (`tests/run-http-smoke.sh`) para validar rutas críticas en local/staging.
+- Se agregó checklist de regresión operativa (`tests/regression-checklist.md`) para releases.
+- Se mejoró la UX del sidebar del bloque Featured Products con estado de carga explícito (spinner + skeletons) durante la obtención de productos.
+- Se ajustó el selector manual del bloque Featured Products para listar únicamente productos con stock disponible, alineando editor y frontend.
+- Se añadió lint sintáctico recursivo con `tests/run-lint.sh` y runner unificado `tests/run-all-tests.sh`.
+- Se ampliaron smoke tests con contratos de render para estados base (empty-state y fallback de taxonomía).
+- Se amplió la cobertura de smoke tests nativos para validar callbacks críticos, sanitizadores y estructura mínima de archivos del tema.
+- Se agregó infraestructura de smoke testing ejecutable con PHP nativo (`tests/run-smoke.php`) sin Composer ni PHPUnit.
+- Se movió la limpieza de imágenes al borrar productos desde `functions.php` a `includes/woocommerce/checkout.php`.
+- Se modularizó el bloque Featured Products en `includes/blocks/featured-products.php` para continuar desacoplando `functions.php`.
+- Se modularizaron los bloques de categorías y marcas (product categories, featured brands, all brands) en `includes/blocks/brands-categories.php`.
+- Se modularizaron las customizaciones de layout de catálogo en `includes/woocommerce/catalog-layout.php`.
+- Se modularizaron personalizaciones de checkout, envío y cuenta en `includes/woocommerce/checkout.php`.
+- Se modularizó header/footer, menús de navegación y AJAX de subcategorías en `includes/theme/layout.php`.
+- Se modularizaron los filtros de catálogo y su integración con `pre_get_posts` en `includes/woocommerce/catalog-filters.php`.
+- Se modularizó la lógica frontend/checkout de MSI en `includes/msi-promotions/frontend.php` para reducir acoplamiento en `functions.php`.
+- Se modularizó la implementación de Text Bar en `includes/admin/text-bar.php` para mantener `functions.php` como entry-point progresivo.
+- Se consolidó la administración custom en un único menú principal **Ocellaris** y se retiraron los accesos legacy separados.
+- Se agregó un dashboard administrativo de Ocellaris con accesos rápidos a MSI, Text Bar, Documentación y Health Check.
 - Se añadieron badges de métodos de pago en el footer: Visa, Mastercard, American Express y Mercado Pago.
 - Se añadieron flechas laterales en el menú de categorías para reforzar la indicación de contenido adicional.
 - Se ajustó el bloque Featured Brands reduciendo padding y aumentando el tamaño visible de los logos.
@@ -165,6 +224,7 @@ Bloque de productos destacados con selección manual o filtros automáticos, y c
 **Comportamiento clave:**
 - Si el total de productos es menor o igual a `productsToShow`, se renderiza grid normal.
 - Si el total supera `productsToShow`, se activa carrusel con navegación lateral e indicadores por posición.
+- En el editor, el panel de selección manual muestra estado de carga visual y solo lista productos disponibles en stock.
 - En el editor, el panel de selección manual muestra una lista de seleccionados con botón para quitar cada producto rápidamente.
 
 ---
@@ -195,6 +255,83 @@ Los colores principales están definidos como variables CSS en `style.css` y pue
 
 ### Menús del Footer
 Crea menús en **Apariencia > Menús** y asígnalos a las ubicaciones del footer.
+
+---
+
+## Testing
+
+La base de pruebas usa smoke tests con **PHP nativo** para validar el registro de hooks en los modulos.
+
+1. Ejecutar smoke tests de hooks, callbacks y sanitización:
+
+```bash
+php tests/run-smoke.php
+```
+
+2. Ejecutar smoke tests de estructura del tema:
+
+```bash
+php tests/run-smoke-structure.php
+```
+
+3. Ejecutar lint sintáctico de todos los PHP del tema:
+
+```bash
+bash tests/run-lint.sh
+```
+
+4. Ejecutar toda la suite nativa:
+
+```bash
+bash tests/run-all-tests.sh
+```
+
+5. Ejecutar smoke HTTP en entorno WordPress real (local o staging):
+
+```bash
+SITE_URL='https://ocellaris.local' bash tests/run-http-smoke.sh
+```
+
+Notas:
+- Por defecto el script permite certificados self-signed en local (`SMOKE_ALLOW_INSECURE=1`).
+- Para exigir validación TLS completa usa `SMOKE_ALLOW_INSECURE=0`.
+- El check de cuenta acepta rutas candidatas (`/my-account/` y `/mi-cuenta/`) via `SMOKE_ACCOUNT_PATHS`.
+
+6. Antes de publicar, validar checklist de regresión:
+
+```text
+tests/regression-checklist.md
+```
+
+7. Ejecutar runtime checks en WordPress real (requiere WP-CLI):
+
+```bash
+WP_PATH='/var/www/html' bash tests/run-wp-runtime-checks.sh
+```
+
+Notas:
+- El script intenta fallback automático por socket MySQL y por `DB_HOST` cuando el `localhost` del CLI no conecta.
+- Puedes forzar valores en Local con variables opcionales:
+
+```bash
+WP_PATH='/var/www/html' \
+WP_DB_SOCKET='/absolute/path/to/mysqld.sock' \
+WP_DB_HOST='localhost:/absolute/path/to/mysqld.sock' \
+WP_DB_PORT='3306' \
+bash tests/run-wp-runtime-checks.sh
+```
+
+8. CI automático:
+- El workflow `Native Theme Tests` corre en cada push/PR y bloquea merges cuando falla la suite nativa.
+
+Cobertura actual inicial:
+- Registro de hooks criticos (`add_action`/`add_filter`) por modulo.
+- Validacion de funciones callback/sanitización críticas.
+- Validación de contratos de render para casos base.
+- Validación de estructura mínima de archivos clave del tema.
+- Lint sintáctico de PHP para todo el árbol del tema.
+- Smoke HTTP opcional contra runtime real para detectar regresiones de rutas críticas.
+- Runtime checks opcionales con WordPress cargado para validar hooks/filtros y registros de bloque.
 
 ---
 
