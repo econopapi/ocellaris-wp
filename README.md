@@ -69,6 +69,10 @@ ocellaris-astra/
 │   │   └── text-bar.php             # Lógica modular de Text Bar
 │   └── msi-promotions/
 │       └── admin-page.php           # Configuración MSI MercadoPago
+│   ├── theme/
+│   │   └── layout.php               # Header/footer, menús y AJAX del header
+│   └── woocommerce/
+│       └── catalog-filters.php      # Filtros de catálogo y pre_get_posts
 ├── template-parts/
 │   ├── footer-custom.php        # Template del footer
 │   └── header-custom.php        # Template del header
@@ -130,6 +134,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se modularizó header/footer, menús de navegación y AJAX de subcategorías en `includes/theme/layout.php`.
 - Se modularizaron los filtros de catálogo y su integración con `pre_get_posts` en `includes/woocommerce/catalog-filters.php`.
 - Se modularizó la lógica frontend/checkout de MSI en `includes/msi-promotions/frontend.php` para reducir acoplamiento en `functions.php`.
 - Se modularizó la implementación de Text Bar en `includes/admin/text-bar.php` para mantener `functions.php` como entry-point progresivo.
