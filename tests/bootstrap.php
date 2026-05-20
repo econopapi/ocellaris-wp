@@ -54,3 +54,10 @@ if (!function_exists('__return_false')) {
         return false;
     }
 }
+
+if (!function_exists('absint')) {
+    function absint($maybeint)
+    {
+        return abs((int) $maybeint);
+    }
+}

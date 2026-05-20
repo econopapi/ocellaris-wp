@@ -36,6 +36,18 @@ $checks = array(
     array('type' => 'filter', 'hook' => 'woocommerce_ship_to_different_address_checked', 'callback' => 'ocellaris_disable_ship_to_different_address', 'priority' => 10, 'accepted_args' => 1),
 );
 
+$requiredFunctions = array(
+    'ocellaris_render_featured_products_block',
+    'ocellaris_render_product_categories_block',
+    'ocellaris_render_featured_brands_block',
+    'ocellaris_render_all_brands_block',
+    'ocellaris_render_filter_categories_block',
+    'ocellaris_render_filter_brand_block',
+    'ocellaris_sanitize_checkbox',
+    'ocellaris_msi_sanitize_products',
+    'ocellaris_admin_health_badge',
+);
+
 $failures = array();
 
 foreach ($moduleFiles as $relativePath) {
@@ -61,6 +73,73 @@ foreach ($checks as $check) {
             $check['priority'],
             $check['accepted_args']
         );
+    }
+}
+
+foreach ($requiredFunctions as $functionName) {
+    if (!function_exists($functionName)) {
+        $failures[] = 'Missing function: ' . $functionName;
+    }
+}
+
+if (function_exists('ocellaris_sanitize_checkbox')) {
+    $checkboxCases = array(
+        array('input' => '1', 'expected' => '1'),
+        array('input' => 1, 'expected' => '1'),
+        array('input' => '0', 'expected' => '0'),
+        array('input' => null, 'expected' => '0'),
+        array('input' => 'anything-else', 'expected' => '0'),
+    );
+
+    foreach ($checkboxCases as $case) {
+        $actual = ocellaris_sanitize_checkbox($case['input']);
+        if ($actual !== $case['expected']) {
+            $failures[] = sprintf(
+                'Unexpected ocellaris_sanitize_checkbox output for input %s: expected %s, got %s',
+                var_export($case['input'], true),
+                var_export($case['expected'], true),
+                var_export($actual, true)
+            );
+        }
+    }
+}
+
+if (function_exists('ocellaris_msi_sanitize_products')) {
+    $rawProducts = array(
+        '120' => array('months' => array(12, 3, 99, 6, -1, 0)),
+        'abc' => array('months' => array(3, 6)),
+        '-4'  => array('months' => array(3, 6)),
+        '205' => array('months' => array()),
+        '333' => array('months' => 'invalid'),
+        '440' => array('months' => array(9, 3)),
+    );
+
+    $expectedProducts = array(
+        120 => array('months' => array(3, 6, 12)),
+        4   => array('months' => array(3, 6)),
+        440 => array('months' => array(3, 9)),
+    );
+
+    $actualProducts = ocellaris_msi_sanitize_products($rawProducts);
+    if ($actualProducts !== $expectedProducts) {
+        $failures[] = sprintf(
+            'Unexpected ocellaris_msi_sanitize_products output. Expected: %s | Actual: %s',
+            json_encode($expectedProducts),
+            json_encode($actualProducts)
+        );
+    }
+}
+
+if (function_exists('ocellaris_admin_health_badge')) {
+    $okBadge = ocellaris_admin_health_badge(true);
+    $errorBadge = ocellaris_admin_health_badge(false);
+
+    if (strpos($okBadge, 'OK') === false) {
+        $failures[] = 'ocellaris_admin_health_badge(true) must contain OK';
+    }
+
+    if (strpos($errorBadge, 'Revisar') === false) {
+        $failures[] = 'ocellaris_admin_health_badge(false) must contain Revisar';
     }
 }
 

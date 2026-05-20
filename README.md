@@ -143,6 +143,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se amplió la cobertura de smoke tests nativos para validar callbacks críticos, sanitizadores y estructura mínima de archivos del tema.
 - Se agregó infraestructura de smoke testing ejecutable con PHP nativo (`tests/run-smoke.php`) sin Composer ni PHPUnit.
 - Se movió la limpieza de imágenes al borrar productos desde `functions.php` a `includes/woocommerce/checkout.php`.
 - Se modularizó el bloque Featured Products en `includes/blocks/featured-products.php` para continuar desacoplando `functions.php`.
@@ -242,15 +243,22 @@ Crea menús en **Apariencia > Menús** y asígnalos a las ubicaciones del footer
 
 La base de pruebas usa smoke tests con **PHP nativo** para validar el registro de hooks en los modulos.
 
-1. Ejecutar smoke tests:
+1. Ejecutar smoke tests de hooks, callbacks y sanitización:
 
 ```bash
 php tests/run-smoke.php
 ```
 
+2. Ejecutar smoke tests de estructura del tema:
+
+```bash
+php tests/run-smoke-structure.php
+```
+
 Cobertura actual inicial:
 - Registro de hooks criticos (`add_action`/`add_filter`) por modulo.
-- Validacion de carga de modulos clave sin errores fatales de inclusion.
+- Validacion de funciones callback/sanitización críticas.
+- Validación de estructura mínima de archivos clave del tema.
 
 ---
 
