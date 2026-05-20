@@ -130,6 +130,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se modularizó la lógica frontend/checkout de MSI en `includes/msi-promotions/frontend.php` para reducir acoplamiento en `functions.php`.
 - Se modularizó la implementación de Text Bar en `includes/admin/text-bar.php` para mantener `functions.php` como entry-point progresivo.
 - Se consolidó la administración custom en un único menú principal **Ocellaris** y se retiraron los accesos legacy separados.
 - Se agregó un dashboard administrativo de Ocellaris con accesos rápidos a MSI, Text Bar, Documentación y Health Check.
