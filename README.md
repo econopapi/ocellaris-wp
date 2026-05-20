@@ -67,7 +67,9 @@ ocellaris-astra/
 │   ├── admin/
 │   │   ├── ocellaris-admin-hub.php  # Menú admin unificado Ocellaris
 │   │   └── text-bar.php             # Lógica modular de Text Bar
-│   └── msi-promotions/
+│   ├── blocks/
+│   │   └── brands-categories.php    # Registro/render de bloques de categorías y marcas
+│   ├── msi-promotions/
 │       └── admin-page.php           # Configuración MSI MercadoPago
 │   ├── theme/
 │   │   └── layout.php               # Header/footer, menús y AJAX del header
@@ -136,6 +138,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se modularizaron los bloques de categorías y marcas (product categories, featured brands, all brands) en `includes/blocks/brands-categories.php`.
 - Se modularizaron las customizaciones de layout de catálogo en `includes/woocommerce/catalog-layout.php`.
 - Se modularizaron personalizaciones de checkout, envío y cuenta en `includes/woocommerce/checkout.php`.
 - Se modularizó header/footer, menús de navegación y AJAX de subcategorías en `includes/theme/layout.php`.
