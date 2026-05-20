@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 if (!defined('ABSPATH')) {
     fwrite(STDERR, "[FAIL] This script must run with WordPress loaded (use wp eval-file).\n");
     exit(1);

@@ -292,6 +292,11 @@ bash tests/run-all-tests.sh
 SITE_URL='https://ocellaris.local' bash tests/run-http-smoke.sh
 ```
 
+Notas:
+- Por defecto el script permite certificados self-signed en local (`SMOKE_ALLOW_INSECURE=1`).
+- Para exigir validación TLS completa usa `SMOKE_ALLOW_INSECURE=0`.
+- El check de cuenta acepta rutas candidatas (`/my-account/` y `/mi-cuenta/`) via `SMOKE_ACCOUNT_PATHS`.
+
 6. Antes de publicar, validar checklist de regresión:
 
 ```text
@@ -302,6 +307,18 @@ tests/regression-checklist.md
 
 ```bash
 WP_PATH='/var/www/html' bash tests/run-wp-runtime-checks.sh
+```
+
+Notas:
+- El script intenta fallback automático por socket MySQL y por `DB_HOST` cuando el `localhost` del CLI no conecta.
+- Puedes forzar valores en Local con variables opcionales:
+
+```bash
+WP_PATH='/var/www/html' \
+WP_DB_SOCKET='/absolute/path/to/mysqld.sock' \
+WP_DB_HOST='localhost:/absolute/path/to/mysqld.sock' \
+WP_DB_PORT='3306' \
+bash tests/run-wp-runtime-checks.sh
 ```
 
 8. CI automático:
