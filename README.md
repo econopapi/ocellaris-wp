@@ -146,6 +146,8 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se mejoró la UX del sidebar del bloque Featured Products con estado de carga explícito (spinner + skeletons) durante la obtención de productos.
+- Se ajustó el selector manual del bloque Featured Products para listar únicamente productos con stock disponible, alineando editor y frontend.
 - Se añadió lint sintáctico recursivo con `tests/run-lint.sh` y runner unificado `tests/run-all-tests.sh`.
 - Se ampliaron smoke tests con contratos de render para estados base (empty-state y fallback de taxonomía).
 - Se amplió la cobertura de smoke tests nativos para validar callbacks críticos, sanitizadores y estructura mínima de archivos del tema.
@@ -211,6 +213,7 @@ Bloque de productos destacados con selección manual o filtros automáticos, y c
 **Comportamiento clave:**
 - Si el total de productos es menor o igual a `productsToShow`, se renderiza grid normal.
 - Si el total supera `productsToShow`, se activa carrusel con navegación lateral e indicadores por posición.
+- En el editor, el panel de selección manual muestra estado de carga visual y solo lista productos disponibles en stock.
 - En el editor, el panel de selección manual muestra una lista de seleccionados con botón para quitar cada producto rápidamente.
 
 ---

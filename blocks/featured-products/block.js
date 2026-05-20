@@ -9,6 +9,7 @@
   var SelectControl = components.SelectControl;
   var ToggleControl = components.ToggleControl;
   var Button = components.Button;
+  var Spinner = components.Spinner;
   var useState = element.useState;
   var useEffect = element.useEffect;
   var apiFetch = wp.apiFetch;
@@ -66,7 +67,7 @@
           tags = _useState2[0],
           setTags = _useState2[1];
       
-      var _useState3 = useState(false),
+        var _useState3 = useState(true),
           isLoading = _useState3[0],
           setIsLoading = _useState3[1];
 
@@ -83,12 +84,11 @@
       function loadProducts() {
         setIsLoading(true);
         setProducts([]);
-        var allProducts = [];
-        var page = 1;
         var perPage = 100;
         var params = {
           per_page: perPage,
-          status: 'publish'
+          status: 'publish',
+          stock_status: 'instock'
         };
 
         // Aplicar filtros según el tipo seleccionado
@@ -118,32 +118,50 @@
           });
         }
 
-        function fetchAllProducts() {
-          fetchPage(page)
+        function isProductInStock(product) {
+          if (!product || typeof product !== 'object') {
+            return false;
+          }
+
+          if (typeof product.is_in_stock === 'boolean') {
+            return product.is_in_stock;
+          }
+
+          if (typeof product.stock_status === 'string') {
+            return product.stock_status.toLowerCase() === 'instock';
+          }
+
+          return true;
+        }
+
+        function fetchAllProducts(pageNum, accumulatedProducts) {
+          return fetchPage(pageNum)
             .then(function (data) {
               // Respuesta inesperada: detener carga para no dejar spinner infinito
               if (!Array.isArray(data)) {
                 throw new Error('Unexpected products response');
               }
 
-              allProducts = allProducts.concat(data);
+              var mergedProducts = accumulatedProducts.concat(data);
 
               if (data.length === perPage) {
-                page++;
-                fetchAllProducts();
-              } else {
-                setProducts(allProducts);
+                return fetchAllProducts(pageNum + 1, mergedProducts);
               }
+
+              return mergedProducts;
             })
-            .catch(function (error) {
-              console.error('Error loading products:', error);
-            })
-            .finally(function () {
-              setIsLoading(false);
-            });
         }
 
-        fetchAllProducts();
+        fetchAllProducts(1, [])
+          .then(function (allProducts) {
+            setProducts(allProducts.filter(isProductInStock));
+          })
+          .catch(function (error) {
+            console.error('Error loading products:', error);
+          })
+          .finally(function () {
+            setIsLoading(false);
+          });
       }
 
       function loadTags() {
@@ -385,7 +403,10 @@
                     })
               ]),
 
-              isLoading && el('p', { className: 'loading-hint' }, 'Cargando productos, esto puede tardar unos segundos...'),
+              isLoading && el('div', { className: 'loading-products-state' }, [
+                el(Spinner, {}),
+                el('span', {}, 'Cargando productos disponibles...')
+              ]),
               el(TextControl, {
                 label: 'Buscar productos',
                 value: searchTerm,
@@ -397,7 +418,13 @@
                 isLoading
                   ? skeletonItems
                   : (filteredProducts.length === 0
-                    ? [el('p', { className: 'empty-hint' }, 'No hay productos disponibles. Intenta otra búsqueda.')]
+                    ? [
+                        el('p', { className: 'empty-hint' },
+                          products.length === 0
+                            ? 'No hay productos en stock disponibles.'
+                            : 'No se encontraron productos con esa búsqueda.'
+                        )
+                      ]
                     : filteredProducts.map(function(product) {
                         var isSelected = attributes.selectedProducts.includes(product.id);
                         var productImage = getProductImage(product);
