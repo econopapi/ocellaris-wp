@@ -73,6 +73,7 @@ ocellaris-astra/
 │   │   └── layout.php               # Header/footer, menús y AJAX del header
 │   └── woocommerce/
 │       ├── checkout.php             # Checkout, shipping y cuenta (hooks WooCommerce)
+│       ├── catalog-layout.php       # Layout/estilos del catálogo y hooks del loop
 │       └── catalog-filters.php      # Filtros de catálogo y pre_get_posts
 ├── template-parts/
 │   ├── footer-custom.php        # Template del footer
@@ -135,6 +136,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se modularizaron las customizaciones de layout de catálogo en `includes/woocommerce/catalog-layout.php`.
 - Se modularizaron personalizaciones de checkout, envío y cuenta en `includes/woocommerce/checkout.php`.
 - Se modularizó header/footer, menús de navegación y AJAX de subcategorías en `includes/theme/layout.php`.
 - Se modularizaron los filtros de catálogo y su integración con `pre_get_posts` en `includes/woocommerce/catalog-filters.php`.
