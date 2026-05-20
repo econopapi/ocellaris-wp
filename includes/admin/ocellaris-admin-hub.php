@@ -22,7 +22,7 @@ function ocellaris_register_admin_hub_menu() {
 		'manage_options',
 		'ocellaris',
 		'ocellaris_render_admin_dashboard_page',
-		'dashicons-admin-site-alt3',
+		get_stylesheet_directory_uri() . '/assets/images/ocellaris-menu-fish.svg',
 		3
 	);
 
@@ -72,6 +72,87 @@ function ocellaris_register_admin_hub_menu() {
 	);
 }
 add_action( 'admin_menu', 'ocellaris_register_admin_hub_menu', 5 );
+
+/**
+ * Enable custom admin menu ordering.
+ *
+ * @param bool $enabled Current custom-order flag.
+ * @return bool
+ */
+function ocellaris_enable_custom_admin_menu_order( $enabled ) {
+	return true;
+}
+add_filter( 'custom_menu_order', 'ocellaris_enable_custom_admin_menu_order' );
+
+/**
+ * Force Ocellaris near the top and keep iPos Sync right below it when present.
+ *
+ * @param array $menu_order Current menu order.
+ * @return array
+ */
+function ocellaris_apply_admin_menu_order( $menu_order ) {
+	if ( ! is_array( $menu_order ) || ! in_array( 'ocellaris', $menu_order, true ) ) {
+		return $menu_order;
+	}
+
+	$ipos_slug = ocellaris_detect_ipos_menu_slug( $menu_order );
+	$remove_slugs = array( 'ocellaris' );
+
+	if ( ! empty( $ipos_slug ) ) {
+		$remove_slugs[] = $ipos_slug;
+	}
+
+	$ordered = array_values( array_diff( $menu_order, $remove_slugs ) );
+	$dashboard_index = array_search( 'index.php', $ordered, true );
+	$insert_at = false !== $dashboard_index ? $dashboard_index + 1 : 0;
+
+	array_splice( $ordered, $insert_at, 0, array( 'ocellaris' ) );
+
+	if ( ! empty( $ipos_slug ) ) {
+		$ocellaris_index = array_search( 'ocellaris', $ordered, true );
+		array_splice( $ordered, $ocellaris_index + 1, 0, array( $ipos_slug ) );
+	}
+
+	return $ordered;
+}
+add_filter( 'menu_order', 'ocellaris_apply_admin_menu_order', 99 );
+
+/**
+ * Detect iPos Sync top-level slug dynamically if the plugin is active.
+ *
+ * @param array $menu_order Current menu order.
+ * @return string
+ */
+function ocellaris_detect_ipos_menu_slug( $menu_order ) {
+	global $menu;
+
+	if ( is_array( $menu ) ) {
+		foreach ( $menu as $entry ) {
+			if ( ! is_array( $entry ) || empty( $entry[0] ) || empty( $entry[2] ) ) {
+				continue;
+			}
+
+			$label = wp_strip_all_tags( (string) $entry[0] );
+			$slug = (string) $entry[2];
+
+			if (
+				false !== stripos( $label, 'ipos' )
+				&& false !== stripos( $label, 'sync' )
+				&& in_array( $slug, $menu_order, true )
+			) {
+				return $slug;
+			}
+		}
+	}
+
+	foreach ( $menu_order as $slug ) {
+		if ( false !== stripos( (string) $slug, 'ipos' ) ) {
+			return (string) $slug;
+		}
+	}
+
+	return '';
+}
 
 /**
  * Render Ocellaris dashboard page.
