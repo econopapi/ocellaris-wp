@@ -63,6 +63,12 @@ ocellaris-astra/
 │       ├── block.js             # Registro y editor del bloque
 │       ├── editor.css           # Estilos para el editor
 │       └── style.css            # Estilos para el frontend
+├── includes/
+│   ├── admin/
+│   │   ├── ocellaris-admin-hub.php  # Menú admin unificado Ocellaris
+│   │   └── text-bar.php             # Lógica modular de Text Bar
+│   └── msi-promotions/
+│       └── admin-page.php           # Configuración MSI MercadoPago
 ├── template-parts/
 │   ├── footer-custom.php        # Template del footer
 │   └── header-custom.php        # Template del header
@@ -124,6 +130,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se modularizó la implementación de Text Bar en `includes/admin/text-bar.php` para mantener `functions.php` como entry-point progresivo.
 - Se consolidó la administración custom en un único menú principal **Ocellaris** y se retiraron los accesos legacy separados.
 - Se agregó un dashboard administrativo de Ocellaris con accesos rápidos a MSI, Text Bar, Documentación y Health Check.
 - Se añadieron badges de métodos de pago en el footer: Visa, Mastercard, American Express y Mercado Pago.
