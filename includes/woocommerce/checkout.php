@@ -228,3 +228,31 @@ function ocellaris_checkout_persistence_assets() {
 	);
 }
 add_action( 'wp_enqueue_scripts', 'ocellaris_checkout_persistence_assets' );
+
+/**
+ * Delete product attachments (featured image and gallery) when deleting a product.
+ */
+function ocellaris_delete_product_images( $post_id ) {
+	if ( get_post_type( $post_id ) !== 'product' ) {
+		return;
+	}
+
+	if ( wp_is_post_revision( $post_id ) ) {
+		return;
+	}
+
+	$thumbnail_id = get_post_thumbnail_id( $post_id );
+	if ( $thumbnail_id ) {
+		wp_delete_attachment( $thumbnail_id, true );
+	}
+
+	$gallery_ids = get_post_meta( $post_id, '_product_image_gallery', true );
+	if ( ! empty( $gallery_ids ) ) {
+		$gallery_ids = explode( ',', $gallery_ids );
+
+		foreach ( $gallery_ids as $image_id ) {
+			wp_delete_attachment( (int) $image_id, true );
+		}
+	}
+}
+add_action( 'before_delete_post', 'ocellaris_delete_product_images', 10, 1 );

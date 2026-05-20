@@ -139,6 +139,7 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se movió la limpieza de imágenes al borrar productos desde `functions.php` a `includes/woocommerce/checkout.php`.
 - Se modularizó el bloque Featured Products en `includes/blocks/featured-products.php` para continuar desacoplando `functions.php`.
 - Se modularizaron los bloques de categorías y marcas (product categories, featured brands, all brands) en `includes/blocks/brands-categories.php`.
 - Se modularizaron las customizaciones de layout de catálogo en `includes/woocommerce/catalog-layout.php`.

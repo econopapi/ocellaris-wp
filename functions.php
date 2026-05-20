@@ -66,42 +66,6 @@ add_action( 'wp_enqueue_scripts', 'child_enqueue_styles', 15 );
  * Implementación modular en includes/admin/text-bar.php
  */
 
-
-/**
- * Eliminar imágenes asociadas al producto al borrar un producto
- */
-add_action('before_delete_post', 'ocellaris_delete_product_images', 10, 1);
-
-function ocellaris_delete_product_images($post_id) {
-
-    // Solo productos
-    if (get_post_type($post_id) !== 'product') {
-        return;
-    }
-
-    // Evitar ejecuciones duplicadas
-    if (wp_is_post_revision($post_id)) {
-        return;
-    }
-
-    // Imagen destacada
-    $thumbnail_id = get_post_thumbnail_id($post_id);
-    if ($thumbnail_id) {
-        wp_delete_attachment($thumbnail_id, true);
-    }
-
-    // Galería del producto
-    $gallery_ids = get_post_meta($post_id, '_product_image_gallery', true);
-
-    if (!empty($gallery_ids)) {
-        $gallery_ids = explode(',', $gallery_ids);
-
-        foreach ($gallery_ids as $image_id) {
-            wp_delete_attachment((int) $image_id, true);
-        }
-    }
-}
-
 // Header menu helpers, ajax endpoint and sidebar menu bootstrap moved to includes/theme/layout.php.
 
 /**
