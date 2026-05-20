@@ -90,7 +90,14 @@ ocellaris-astra/
 │   └── run-smoke.php            # Runner de smoke tests sin Composer/PHPUnit
 │   ├── run-smoke-structure.php  # Smoke test de integridad de estructura del tema
 │   ├── run-lint.sh              # Lint sintactico PHP recursivo
-│   └── run-all-tests.sh         # Ejecuta toda la suite de tests nativos
+│   ├── run-all-tests.sh         # Ejecuta toda la suite de tests nativos
+│   ├── run-http-smoke.sh        # Smoke HTTP contra entorno WP real (local/staging)
+│   ├── run-wp-runtime-checks.php # Validaciones de hooks/bloques con WordPress cargado
+│   ├── run-wp-runtime-checks.sh  # Wrapper WP-CLI para runtime checks
+│   └── regression-checklist.md  # Checklist de regresion para pre-release
+├── .github/
+│   └── workflows/
+│       └── native-tests.yml     # CI: ejecuta suite nativa en push/PR
 └── README.md
 ```
 
@@ -146,6 +153,10 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se agregaron runtime checks con WP-CLI (`tests/run-wp-runtime-checks.sh`) para validar hooks y bloques con WordPress real cargado.
+- Se agregó pipeline de CI (`.github/workflows/native-tests.yml`) para ejecutar la suite nativa en cada push/PR.
+- Se agregó smoke HTTP de runtime real (`tests/run-http-smoke.sh`) para validar rutas críticas en local/staging.
+- Se agregó checklist de regresión operativa (`tests/regression-checklist.md`) para releases.
 - Se mejoró la UX del sidebar del bloque Featured Products con estado de carga explícito (spinner + skeletons) durante la obtención de productos.
 - Se ajustó el selector manual del bloque Featured Products para listar únicamente productos con stock disponible, alineando editor y frontend.
 - Se añadió lint sintáctico recursivo con `tests/run-lint.sh` y runner unificado `tests/run-all-tests.sh`.
@@ -275,12 +286,35 @@ bash tests/run-lint.sh
 bash tests/run-all-tests.sh
 ```
 
+5. Ejecutar smoke HTTP en entorno WordPress real (local o staging):
+
+```bash
+SITE_URL='https://ocellaris.local' bash tests/run-http-smoke.sh
+```
+
+6. Antes de publicar, validar checklist de regresión:
+
+```text
+tests/regression-checklist.md
+```
+
+7. Ejecutar runtime checks en WordPress real (requiere WP-CLI):
+
+```bash
+WP_PATH='/var/www/html' bash tests/run-wp-runtime-checks.sh
+```
+
+8. CI automático:
+- El workflow `Native Theme Tests` corre en cada push/PR y bloquea merges cuando falla la suite nativa.
+
 Cobertura actual inicial:
 - Registro de hooks criticos (`add_action`/`add_filter`) por modulo.
 - Validacion de funciones callback/sanitización críticas.
 - Validación de contratos de render para casos base.
 - Validación de estructura mínima de archivos clave del tema.
 - Lint sintáctico de PHP para todo el árbol del tema.
+- Smoke HTTP opcional contra runtime real para detectar regresiones de rutas críticas.
+- Runtime checks opcionales con WordPress cargado para validar hooks/filtros y registros de bloque.
 
 ---
 
