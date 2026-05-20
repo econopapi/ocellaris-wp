@@ -1461,7 +1461,6 @@ function ocellaris_config_text_bar_page() {
 		'ocellaris_render_text_bar'
 	);
 }
-add_action('admin_menu', 'ocellaris_config_text_bar_page');
 
 /**
  * Registro de settings de la barra de texto
@@ -2789,6 +2788,7 @@ add_action( 'woocommerce_before_shop_loop', 'ocellaris_force_3_columns', 5 );
 
 // Include admin page
 require_once get_stylesheet_directory() . '/includes/msi-promotions/admin-page.php';
+require_once get_stylesheet_directory() . '/includes/admin/ocellaris-admin-hub.php';
 
 /**
  * Check if a product is eligible for MSI (Meses Sin Intereses)

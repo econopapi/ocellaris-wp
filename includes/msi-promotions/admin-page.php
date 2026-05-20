@@ -48,7 +48,6 @@ function ocellaris_msi_register_admin_menu() {
 	// 	'ocellaris_msi_render_openpay_page'
 	// );
 }
-add_action( 'admin_menu', 'ocellaris_msi_register_admin_menu' );
 
 /**
  * Register settings for MSI MercadoPago
@@ -114,7 +113,12 @@ function ocellaris_msi_sanitize_products( $input ) {
  * Enqueue admin scripts and styles for the MSI page
  */
 function ocellaris_msi_admin_scripts( $hook ) {
-	if ( $hook !== 'toplevel_page_ocellaris-promociones' ) {
+	$allowed_hooks = array(
+		'toplevel_page_ocellaris-promociones',
+		'ocellaris_page_ocellaris-msi-mercadopago',
+	);
+
+	if ( ! in_array( $hook, $allowed_hooks, true ) ) {
 		return;
 	}
 

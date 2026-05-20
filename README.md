@@ -103,10 +103,19 @@ Los íconos SVG de pago se cargan desde:
 Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombres.
 
 ### Barra de Texto Superior (Text Bar)
-- Configurable desde **Apariencia > Ocellaris Text Bar**
+- Configurable desde **Ocellaris > Text Bar**
 - Activar/desactivar desde el panel de administración
 - Color de fondo personalizable
 - Contenido de texto editable
+
+### Hub Administrativo Ocellaris
+- Menú principal único en el dashboard: **Ocellaris**
+- Submenús incluidos:
+  - **Dashboard** (resumen de módulos)
+  - **MSI MercadoPago** (configuración de productos MSI)
+  - **Text Bar** (configuración de barra superior)
+  - **Documentación** (inventario técnico del tema)
+  - **Health Check** (validaciones rápidas no destructivas)
 
 ### Optimizaciones de WooCommerce
 - Ocultación de opciones de envío en el carrito
@@ -115,6 +124,8 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se consolidó la administración custom en un único menú principal **Ocellaris** y se retiraron los accesos legacy separados.
+- Se agregó un dashboard administrativo de Ocellaris con accesos rápidos a MSI, Text Bar, Documentación y Health Check.
 - Se añadieron badges de métodos de pago en el footer: Visa, Mastercard, American Express y Mercado Pago.
 - Se añadieron flechas laterales en el menú de categorías para reforzar la indicación de contenido adicional.
 - Se ajustó el bloque Featured Brands reduciendo padding y aumentando el tamaño visible de los logos.
