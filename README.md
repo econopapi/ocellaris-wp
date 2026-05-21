@@ -52,7 +52,6 @@ ocellaris-astra/
 │   ├── images/
 │   │   └── reef-background.jpg  # Imagen de fondo para CTA
 │   └── js/
-│       ├── checkout-shipping-filter.js  # Filtro de envío en checkout
 │       └── custom-header.js     # Lógica del menú lateral y búsqueda
 ├── blocks/
 │   ├── featured-brands/         # Bloque de marcas destacadas
@@ -149,10 +148,10 @@ Puedes reemplazar esos archivos por tus SVG finales manteniendo los mismos nombr
 ### Optimizaciones de WooCommerce
 - Ocultación de opciones de envío en el carrito
 - Simplificación del checkout (dirección única)
-- Filtro de métodos de envío
 - Eliminación automática de imágenes al borrar productos
 
 ## Actualizaciones Recientes
+- Se retiró la lógica JS de filtrado agresivo de métodos de envío en checkout (`assets/js/checkout-shipping-filter.js`) y su enqueue en `includes/woocommerce/checkout.php`, ya que el filtrado se resolvió desde la plataforma de envíos.
 - Se agregaron runtime checks con WP-CLI (`tests/run-wp-runtime-checks.sh`) para validar hooks y bloques con WordPress real cargado.
 - Se agregó pipeline de CI (`.github/workflows/native-tests.yml`) para ejecutar la suite nativa en cada push/PR.
 - Se agregó smoke HTTP de runtime real (`tests/run-http-smoke.sh`) para validar rutas críticas en local/staging.
