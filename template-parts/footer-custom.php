@@ -44,7 +44,7 @@
 						<a href="tel:763-432-9691">55 7508 5663</a>                        
                     </p>
                     <div class="contact-hours">
-                        <p>L-V 10-17 horas (UTC-6)</p>
+                        <p>L-V 10-19 horas (UTC-6)</p>
                         <p>Sábados 10-15 horas (UTC-6)</p>
                     </div>
                     <p class="contact-email">
@@ -53,7 +53,7 @@
 						</svg>
 						<a href="mailto:atencionaclientes@ocellaris.mx">atencionaclientes@ocellaris.mx</a>                       
                     </p>
-                    <div class="contact-adress">
+                    <div class="contact-address">
                         <p>Porfirio Sosa 107</p>
                         <p>Colonial Iztapalapa, CDMX, 09270</p>
                     </div>
