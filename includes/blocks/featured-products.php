@@ -240,7 +240,7 @@ function ocellaris_render_featured_products_block($attributes) {
 					<span class="featured-products-carousel-icon" aria-hidden="true">&lsaquo;</span>
 				</button>
 				<div class="featured-products-carousel-viewport">
-					<div class="featured-products-grid featured-products-carousel-track <?php echo esc_attr($grid_class); ?>" style="<?php echo esc_attr($grid_style); ?>">
+					<div class="featured-products-carousel-track" style="<?php echo esc_attr($grid_style); ?>">
 						<?php foreach ($items_to_render as $product_id): ?>
 						<?php
 						$product = wc_get_product($product_id);

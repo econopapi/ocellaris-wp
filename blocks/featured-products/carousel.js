@@ -69,11 +69,13 @@
       }
 
       function update() {
-        var itemWidth = 100 / visibleItems;
+        var viewportWidth = $viewport[0] ? $viewport[0].getBoundingClientRect().width : $viewport.width();
+        var itemWidth = viewportWidth / visibleItems;
         var offset = -(currentIndex * itemWidth);
 
-        $items.css('width', itemWidth + '%');
-        $track.css('transform', 'translateX(' + offset + '%)');
+        $track.css('--products-per-view', visibleItems);
+        $items.css('width', itemWidth + 'px');
+        $track.css('transform', 'translateX(' + offset + 'px)');
 
         if (maxIndex <= 0) {
           $prev.prop('disabled', true);
@@ -179,6 +181,8 @@
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(recalculate, 150);
       });
+
+      $(window).on('load', recalculate);
 
       recalculate();
     });
